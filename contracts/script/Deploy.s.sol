@@ -39,7 +39,10 @@ contract Deploy is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address oracle      = vm.envAddress("ORACLE_ADDRESS");
-        address usdt        = vm.envAddress("USDT_ADDRESS");
+        // TOKEN_ADDRESS takes precedence; fallback to USDT_ADDRESS for backwards compat
+        address token;
+        try vm.envAddress("TOKEN_ADDRESS") returns (address t) { token = t; }
+        catch { token = vm.envAddress("USDT_ADDRESS"); }
 
         bool isSepolia = block.chainid == 11142220;
 
@@ -53,10 +56,10 @@ contract Deploy is Script {
         console.log("  Identity Registry:           ", identityReg);
         console.log("  Reputation Registry:         ", reputationReg);
 
-        CeloPactEscrow escrow = new CeloPactEscrow(address(adapter), usdt, oracle);
+        CeloPactEscrow escrow = new CeloPactEscrow(address(adapter), token, oracle);
         console.log("CeloPactEscrow deployed at:    ", address(escrow));
         console.log("  Adapter (registry):          ", address(adapter));
-        console.log("  USDT:                        ", usdt);
+        console.log("  Token:                       ", token);
         console.log("  Oracle:                      ", oracle);
         console.log("  Network:                     ", isSepolia ? "Celo Sepolia" : "Celo Mainnet");
 
