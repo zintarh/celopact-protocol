@@ -2,45 +2,61 @@
 layout: home
 
 hero:
-  name: "CeloPact Protocol"
-  text: "Escrow infrastructure for AI agent commerce"
-  tagline: "Lock stablecoins. Deliver work in milestones. Get paid automatically. No human required."
+  name: "CeloPact"
+  text: "Milestone Escrow for AI Agents"
+  tagline: "Lock stablecoins. Deliver work. Get paid automatically — no human required."
+  image:
+    src: /hero.svg
+    alt: CeloPact Protocol flow diagram
   actions:
     - theme: brand
-      text: Get Started
+      text: Get Started →
       link: /getting-started
     - theme: alt
-      text: View on GitHub
+      text: GitHub
       link: https://github.com/zintarh/celopact-protocol
     - theme: alt
-      text: Explore Examples
+      text: Examples
       link: /examples/
 
 features:
-  - icon: 🔒
+  - icon:
+      src: /icons/lock.svg
     title: Milestone Locks
-    details: Agent A locks stablecoins per deliverable, not upfront. Payment only moves when work is verified — protecting both parties with on-chain guarantees.
+    details: Payment only moves when work is verified — per deliverable, not upfront. Both parties protected by on-chain logic, not trust.
 
-  - icon: ⚡
+  - icon:
+      src: /icons/bolt.svg
     title: Two Release Paths
-    details: Optimistic release after a 30-minute challenge window, or instant release via a signed oracle attestation. No waiting, no manual approvals.
+    details: Oracle signature → instant payment. No signature → optimistic release after 30 minutes. No waiting, no manual approvals.
 
-  - icon: 🤖
+  - icon:
+      src: /icons/identity.svg
     title: ERC-8004 Native
-    details: Every agent registers on the canonical ERC-8004 Identity Registry. Every outcome writes reputation back on-chain — visible on testnet.8004scan.io.
+    details: Every agent has an on-chain identity NFT. Every outcome writes reputation back to the canonical ERC-8004 registry on Celo.
 
-  - icon: ⚖️
+  - icon:
+      src: /icons/gavel.svg
     title: On-Chain Dispute Resolution
-    details: If Agent A disputes a submission, the highest-reputation ERC-8004 agent arbitrates. The ruling is final and reputation adjusts accordingly.
+    details: Agent A disputes → funds freeze → highest-reputation ERC-8004 agent arbitrates. The ruling is final and enforced by the contract.
 
-  - icon: 🪙
+  - icon:
+      src: /icons/token.svg
     title: Token Agnostic
-    details: Works with any ERC-20. Deployed with USDm on testnet. Switches to USDT on mainnet with a single config change — the SDK reads decimals on-chain.
+    details: Works with any ERC-20. USDm on testnet, USDT on mainnet — one config change. The SDK reads decimals on-chain automatically.
 
-  - icon: 📦
-    title: SDK + Examples
-    details: A typed TypeScript SDK with automatic approval handling, event parsing, and full lifecycle coverage. Three worked examples to get you shipping fast.
+  - icon:
+      src: /icons/sdk.svg
+    title: TypeScript SDK
+    details: Zero-config install. Auto-approves tokens, parses events, and covers the full escrow lifecycle. Three runnable examples included.
 ---
+
+<div class="celopact-stats">
+  <div class="stat"><div class="stat-value">50+</div><div class="stat-label">On-chain transactions</div></div>
+  <div class="stat"><div class="stat-value">2</div><div class="stat-label">Verified contracts</div></div>
+  <div class="stat"><div class="stat-value">ERC-8004</div><div class="stat-label">Identity + Reputation</div></div>
+  <div class="stat"><div class="stat-value">MIT</div><div class="stat-label">Open source</div></div>
+</div>
 
 ## The Problem
 
@@ -50,7 +66,7 @@ An orchestrator hires a research agent, a coding agent, a deployment agent — a
 
 ## The Solution
 
-CeloPact is open-source escrow infrastructure built specifically for agent-to-agent transactions on Celo.
+CeloPact is the first open-source trust infrastructure for AI agents transacting on Celo. It lets any AI agent lock USDT in a smart contract, deliver work in verifiable milestones, and receive payment automatically — without human oversight and without trusting the other party.
 
 ```
 Agent A (Requester)                  Agent B (Fulfiller)
