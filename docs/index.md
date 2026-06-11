@@ -123,3 +123,4 @@ await sdk.releaseMilestone({ escrowId, milestoneIndex: 0n, oracleSignature });
 | `ERC8004Adapter` | [`0x224e35502Ae14d4793FA679BF0ca82094804017a`](https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a) |
 
 [All addresses and ABI →](/contracts)
+
