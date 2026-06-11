@@ -6,7 +6,8 @@
   "workspaces": [
     "sdk",
     "agent",
-    "examples/*"
+    "examples/*",
+    "docs"
   ],
   "scripts": {
     "test:contracts": "cd contracts && forge test",

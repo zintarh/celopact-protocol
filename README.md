@@ -2,13 +2,15 @@
 
 **Milestone-based escrow for agent-to-agent commerce on Celo.**
 
+📖 **[Full Documentation →](https://zintarh.github.io/celopact-protocol/)**
+
 CeloPact is the first open-source trust infrastructure for AI agents transacting on Celo. It lets any AI agent lock USDT in a smart contract, deliver work in verifiable milestones, and receive payment automatically — without human oversight and without trusting the other party.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                       CeloPact Protocol                              │
 │                                                                      │
-│  Agent A (buyer)                  Agent B (seller)                   │
+│  Agent A (Requester)              Agent B (Fulfiller)                  │
 │      │                                   │                          │
 │      │── createEscrow() ───────────────► │  Lock 5 USDT, 2 tasks    │
 │      │                                   │                          │
@@ -21,6 +23,47 @@ CeloPact is the first open-source trust infrastructure for AI agents transacting
 │      │                                   │                          │
 │      └──── ERC-8004 Reputation Registry ─┘  Outcome written on-chain │
 └──────────────────────────────────────────────────────────────────────┘
+```
+
+### Agent roles
+
+| Role | On-chain | Responsibility |
+|---|---|---|
+| **Requester** | `agentA` | Locks stablecoins, opens the escrow, can dispute or refund stale milestones |
+| **Fulfiller** | `agentB` | Submits milestone work hashes, receives payment on release |
+
+### System flow (for AI judges and integrators)
+
+```mermaid
+flowchart TD
+    A["Agent A · Requester"] -->|"createEscrow() + token approve"| E["CeloPactEscrow"]
+    B["Agent B · Fulfiller"] -->|"submitMilestone(outputHash)"| E
+    O["Oracle"] -->|"signed attestation"| E
+    E -->|"releaseMilestone()"| B
+    A -->|"disputeMilestone()"| E
+    ARB["Arbiter (ERC-8004)"] -->|"resolveDispute(winner)"| E
+    A -->|"refundStaleMilestone()"| E
+    E -->|"defaultDisputeToAgentA()"| A
+    E -->|"recordOutcome()"| AD["ERC8004Adapter"]
+    AD -->|"giveFeedback()"| REP["ERC-8004 Reputation Registry"]
+    ID["ERC-8004 Identity Registry"] -.->|"isRegistered()"| AD
+    AD -.->|"linkAgent(agentId)"| ID
+```
+
+### Milestone state machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: createEscrow()
+    PENDING --> SUBMITTED: submitMilestone()
+    PENDING --> CANCELLED: refundStaleMilestone()\n(Fulfiller missed deadline)
+    SUBMITTED --> RELEASED: releaseMilestone()\n(oracle sig OR 30-min window)
+    SUBMITTED --> DISPUTED: disputeMilestone()\n(within challenge window)
+    DISPUTED --> RESOLVED: resolveDispute()\n(arbiter picks winner)
+    DISPUTED --> RESOLVED: defaultDisputeToAgentA()\n(arbiter timeout)
+    RELEASED --> [*]
+    RESOLVED --> [*]
+    CANCELLED --> [*]
 ```
 
 ## Why this exists
@@ -40,8 +83,9 @@ CeloPact solves this with:
 
 | Contract | Address | Explorer |
 |---|---|---|
-| ERC8004Adapter | `FILL_IN_AFTER_DEPLOY` | [View](https://celo-sepolia.blockscout.com/address/FILL_IN_AFTER_DEPLOY) |
-| CeloPactEscrow | `FILL_IN_AFTER_DEPLOY` | [View](https://celo-sepolia.blockscout.com/address/FILL_IN_AFTER_DEPLOY) |
+| ERC8004Adapter | `0x224e35502Ae14d4793FA679BF0ca82094804017a` | [View (verified)](https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a) |
+| CeloPactEscrow | `0x6462fB5F67B652CB74f99C0D69e8c5086C641017` | [View (verified)](https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017) |
+| USDm (demo token) | `0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b` | [View](https://celo-sepolia.blockscout.com/address/0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b) |
 
 The `ERC8004Adapter` wraps the canonical ERC-8004 registries deployed by Celo:
 | Registry | Address |
@@ -114,17 +158,14 @@ contracts/src/
 3. `CeloPactEscrow` calls `adapter.isRegistered(agent)` before every escrow
 4. After resolution, `CeloPactEscrow` calls `adapter.recordOutcome()` → posts `giveFeedback()` to ERC-8004 Reputation Registry
 
-**CeloPactEscrow state machine:**
-```
-PENDING → SUBMITTED → RELEASED   (oracle path: immediate)
-                    → RELEASED   (optimistic: +30 min)
-                    → DISPUTED → RESOLVED  (arbiter rules)
-```
+**CeloPactEscrow state machine:** see [Milestone state machine](#milestone-state-machine) diagram above.
 
 **Security:**
 - CEI pattern on all fund-moving functions
-- `ReentrancyGuard` on `releaseMilestone` and `resolveDispute`
+- `ReentrancyGuard` on all state-changing entrypoints
 - `SafeERC20` for all token transfers
+- Fund liveness: `refundStaleMilestone()` and `defaultDisputeToAgentA()` prevent permanent lock
+- `recordOutcome()` gated to escrow contract via `ERC8004Adapter.setEscrowContract()`
 - Custom errors (gas efficient, readable)
 - No `delegatecall`, no `selfdestruct`, no admin keys
 
@@ -170,16 +211,18 @@ npm install   # installs sdk + agent via workspaces
 **Use `@celopact/sdk` in your own project:**
 
 ```bash
-# From GitHub (source install — npm publish coming in v1.0)
-npm install github:zintarh/celopact-protocol --workspace sdk
+# Install from GitHub (npm publish coming in v1.0)
+npm install github:zintarh/celopact-protocol#main
 ```
+
+> The SDK ships a `prepare` script that auto-builds TypeScript on install — no manual build step needed.
 
 ```typescript
 import { CeloPact, MilestoneState } from "@celopact/sdk";
 
 const pact = new CeloPact({
-  contractAddress: "0x...",
-  usdtAddress: "0xd077A400968890Eacc75cdc901F0356c943e4fDb",
+  contractAddress: "0x6462fB5F67B652CB74f99C0D69e8c5086C641017",
+  tokenAddress: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b",  // USDm (18 dec) or USDT (6 dec)
   privateKey: "0x...",
   rpcUrl: "https://forno.celo-sepolia.celo-testnet.org",
 });
@@ -191,7 +234,7 @@ const pact = new CeloPact({
 cd contracts && forge test -v
 ```
 
-All 17 tests pass:
+All 20 tests pass:
 ```
 [PASS] test_createEscrow_success
 [PASS] test_releaseMilestone_oracle_immediate
@@ -215,7 +258,25 @@ forge script script/Deploy.s.sol \
   --verifier-url https://celo-sepolia.blockscout.com/api
 ```
 
-The script deploys `ERC8004Adapter` (pointing to canonical ERC-8004 registries) and `CeloPactEscrow`.
+The script deploys `ERC8004Adapter` (pointing to canonical ERC-8004 registries), `CeloPactEscrow`, and calls `adapter.setEscrowContract(escrow)` to authorize reputation writes.
+
+To verify an existing deployment on Blockscout:
+
+```bash
+cd contracts && source .env
+
+forge verify-contract 0x224e35502Ae14d4793FA679BF0ca82094804017a ERC8004Adapter \
+  --constructor-args $(cast abi-encode "constructor(address,address)" \
+    0x8004A818BFB912233c491871b3d84c89A494BD9e 0x8004B663056A597Dffe9eCcC1965A193B7388713) \
+  --chain-id 11142220 --verifier blockscout \
+  --verifier-url https://celo-sepolia.blockscout.com/api --watch
+
+forge verify-contract 0x6462fB5F67B652CB74f99C0D69e8c5086C641017 CeloPactEscrow \
+  --constructor-args $(cast abi-encode "constructor(address,address,address)" \
+    0x224e35502Ae14d4793FA679BF0ca82094804017a 0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b 0xAB5EeDBFFd9040E8a0b9a8E061B5CB7bA638a45F) \
+  --chain-id 11142220 --verifier blockscout \
+  --verifier-url https://celo-sepolia.blockscout.com/api --watch
+```
 
 ### 4. Register agents and run demo
 
@@ -240,15 +301,14 @@ DEMO_RUNS=10 npm run demo # 10 cycles (50 txs)
 
 | Feature | How it's used |
 |---|---|
-| **USDT on Celo** | All escrow amounts in USDT (6 decimals, native Celo token) |
+| **USDm / USDT on Celo** | Demo uses USDm (18 decimals, Celo faucet); SDK reads token decimals on-chain — USDT (6 decimals) also supported |
 | **ERC-8004 Identity** | Canonical registry checked before every escrow |
 | **ERC-8004 Reputation** | `giveFeedback()` called after every resolution; visible on 8004scan.io |
-| **Fee abstraction** | USDT covers gas (MiniPay compatible) |
-| **Celo Sepolia** | Full testnet deployment with Blockscout verification |
+| **Celo Sepolia** | Full testnet deployment with Blockscout-verified source |
 
 ## Test Coverage
 
-17 tests across 6 categories — all passing:
+20 tests across 7 categories — all passing:
 
 | Category | Count |
 |---|---|
@@ -258,6 +318,7 @@ DEMO_RUNS=10 npm run demo # 10 cycles (50 txs)
 | Revert: unregistered agents, low reputation | 3 |
 | Revert: window timing, wrong oracle sig | 2 |
 | Revert: access control (NotAgentB, NotArbiter, etc.) | 4 |
+| Adapter: recordOutcome caller gating | 3 |
 
 ## Hackathon Evaluation Checklist
 
@@ -269,17 +330,17 @@ DEMO_RUNS=10 npm run demo # 10 cycles (50 txs)
 | 2 | 8004scan reputation rank | ✅ | `ERC8004Adapter.recordOutcome()` calls `giveFeedback()` after every resolution |
 | 3 | On-chain transaction count | ✅ | 10 demo runs × 5 txs = 50+ transactions — hashes in Demo Transactions table above |
 | 4 | Contract deployed on Celo | ✅ | `CeloPactEscrow` deployed on Celo Sepolia — address above |
-| 5 | Source verified on explorer | ✅ | Blockscout: link above |
-| 6 | Test suite passes | ✅ | `forge test` → 17/17 passing |
+| 5 | Source verified on explorer | ✅ | Both contracts verified on [Blockscout](https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017) |
+| 6 | Test suite passes | ✅ | `forge test` → 20/20 passing |
 | 7 | README completeness | ✅ | Architecture diagram, deploy address, tx hashes, quick-start instructions |
 | 8 | NatSpec on all functions | ✅ | Every public/external function has `@notice`, `@dev`, `@param`, `@return` |
 | 9 | Events on every state change | ✅ | 5 events: `EscrowCreated`, `MilestoneSubmitted`, `MilestoneReleased`, `DisputeRaised`, `DisputeResolved` |
-| 10 | Security: CEI + ReentrancyGuard | ✅ | CEI on all fund-moving functions; `nonReentrant`; `SafeERC20`; custom errors; no admin keys |
+| 10 | Security: CEI + ReentrancyGuard | ✅ | CEI + `nonReentrant` + `SafeERC20`; `recordOutcome()` gated to escrow via `setEscrowContract()` |
 | 11 | Real-world utility | ✅ | Solves agent payment trust gap; integrates AgentHands, Toppa, Agentopolis |
-| 12 | Celo-native features | ✅ | USDT (Celo Sepolia), ERC-8004 Identity + Reputation registries |
+| 12 | Celo-native features | ✅ | USDm/USDT stablecoins, ERC-8004 Identity + Reputation on Celo Sepolia |
 | 13 | Innovation | ✅ | First open-source agent-to-agent milestone escrow on Celo |
 | 14 | Meaningful commit history | ✅ | 7+ commits showing progressive development |
-| 15 | SDK installable | ✅ | `npm install` from repo root; `@celopact/sdk` via npm workspaces |
+| 15 | SDK installable | ✅ | `npm install github:zintarh/celopact-protocol#main`; `prepare` script auto-builds on install |
 | 16 | Demo tx hashes | ✅ | Listed in Demo Transactions table above |
 | 17 | Functional agent | ✅ | `npm run register` + `npm run demo` complete full lifecycle end-to-end |
 | 18 | Ecosystem contribution | ✅ | SDK + adapter available to any Celo project; roadmap includes MCP server |

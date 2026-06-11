@@ -9,6 +9,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Hex } from "viem";
+import { resolveChain, type CeloNetworkName, type ResolveChainOptions } from "./networks.js";
 
 /** Celo Sepolia testnet — the active Celo testnet since the L2 migration (March 2025). */
 export const celoCeloSepolia: Chain = defineChain({
@@ -40,14 +41,22 @@ export const celoMainnet: Chain = defineChain({
   },
 });
 
-/** Creates a viem public + wallet client pair for the given Celo network. */
+export interface CreateCeloClientsOptions extends ResolveChainOptions {
+  rpcUrl: string;
+}
+
+/** Creates a viem public + wallet client pair for any supported Celo network. */
 export function createCeloClients(
   privateKey: Hex,
-  rpcUrl: string
-): { publicClient: PublicClient; walletClient: WalletClient } {
+  options: CreateCeloClientsOptions | string
+): { publicClient: PublicClient; walletClient: WalletClient; chain: Chain } {
   const account = privateKeyToAccount(privateKey);
 
-  const chain = rpcUrl.includes("testnet") ? celoCeloSepolia : celoMainnet;
+  const resolved: CreateCeloClientsOptions =
+    typeof options === "string" ? { rpcUrl: options } : options;
+
+  const chain = resolveChain(resolved);
+  const rpcUrl = resolved.rpcUrl;
 
   const publicClient = createPublicClient({
     chain,
@@ -60,5 +69,7 @@ export function createCeloClients(
     transport: http(rpcUrl),
   });
 
-  return { publicClient, walletClient };
+  return { publicClient, walletClient, chain };
 }
+
+export type { CeloNetworkName, ResolveChainOptions };

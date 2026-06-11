@@ -1,4 +1,5 @@
 import type { Address, Hash, Hex } from "viem";
+import type { CeloNetworkName } from "./networks.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Milestone States — mirrors CeloPactEscrow.sol MilestoneState enum
@@ -10,6 +11,7 @@ export enum MilestoneState {
   RELEASED  = 2,
   DISPUTED  = 3,
   RESOLVED  = 4,
+  CANCELLED = 5,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,15 +92,22 @@ export interface CeloPactConfig {
   contractAddress: Address;
   /**
    * Address of the ERC-20 token used for escrow payments.
-   * Celo Sepolia USDm:  0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b  (18 decimals)
-   * Celo Mainnet USDT:  0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e  (6 decimals)
-   *
-   * The SDK is token-agnostic — always read decimals on-chain via `ERC20_ABI` before
-   * computing amounts; do not assume a fixed decimal count.
+   * Use `CELO_NETWORKS[network].tokens` for canonical addresses, or any ERC-20.
+   * Always read decimals on-chain — do not assume 6 or 18.
    */
   tokenAddress: Address;
   /** Private key of the calling agent (hex string, with 0x prefix). */
   privateKey: Hex;
   /** RPC URL for the target Celo network. */
   rpcUrl: string;
+  /**
+   * Target network by name. Preferred over inferring from the RPC URL.
+   * @example "celo-sepolia" | "celo-mainnet"
+   */
+  network?: CeloNetworkName;
+  /**
+   * Target network by chain ID (11142220 = Sepolia, 42220 = mainnet).
+   * Used when `network` is not set.
+   */
+  chainId?: number;
 }

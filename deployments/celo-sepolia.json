@@ -12,10 +12,12 @@
   "contracts": {
     "ERC8004Adapter": {
       "address": "0x224e35502Ae14d4793FA679BF0ca82094804017a",
+      "verified": true,
       "explorer": "https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a"
     },
     "CeloPactEscrow": {
       "address": "0x6462fB5F67B652CB74f99C0D69e8c5086C641017",
+      "verified": true,
       "explorer": "https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017",
       "constructorArgs": {
         "registry": "0x224e35502Ae14d4793FA679BF0ca82094804017a",

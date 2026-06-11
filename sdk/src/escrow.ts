@@ -1,4 +1,4 @@
-import { decodeEventLog, type Address, type Hex } from "viem";
+import { decodeEventLog, type Address, type Chain, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { createCeloClients } from "./client.js";
 import { CELOPACT_ESCROW_ABI, ERC20_ABI } from "./abi.js";
@@ -38,6 +38,7 @@ export class CeloPact {
   private readonly contractAddress: Address;
   private readonly tokenAddress: Address;
   private readonly account: ReturnType<typeof privateKeyToAccount>;
+  private readonly chain: Chain;
   private readonly publicClient: ReturnType<typeof createCeloClients>["publicClient"];
   private readonly walletClient: ReturnType<typeof createCeloClients>["walletClient"];
 
@@ -45,9 +46,14 @@ export class CeloPact {
     this.contractAddress = config.contractAddress;
     this.tokenAddress    = config.tokenAddress;
     this.account         = privateKeyToAccount(config.privateKey);
-    const { publicClient, walletClient } = createCeloClients(config.privateKey, config.rpcUrl);
+    const { publicClient, walletClient, chain } = createCeloClients(config.privateKey, {
+      rpcUrl: config.rpcUrl,
+      network: config.network,
+      chainId: config.chainId,
+    });
     this.publicClient = publicClient;
     this.walletClient = walletClient;
+    this.chain = chain;
   }
 
   /** The wallet address of the agent using this SDK instance. */
@@ -78,7 +84,8 @@ export class CeloPact {
       functionName: "createEscrow",
       args: [params.agentB, params.amounts],
       account: this.account,
-    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+      chain: this.chain,
+    });
 
     const receipt = await this.publicClient.waitForTransactionReceipt({ hash: txHash });
 
@@ -129,7 +136,8 @@ export class CeloPact {
       functionName: "submitMilestone",
       args: [params.escrowId, params.milestoneIndex, params.outputHash],
       account: this.account,
-    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+      chain: this.chain,
+    });
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -157,7 +165,8 @@ export class CeloPact {
       functionName: "releaseMilestone",
       args: [params.escrowId, params.milestoneIndex, sig],
       account: this.account,
-    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+      chain: this.chain,
+    });
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -179,7 +188,8 @@ export class CeloPact {
       functionName: "disputeMilestone",
       args: [params.escrowId, params.milestoneIndex, params.proposedArbiter],
       account: this.account,
-    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+      chain: this.chain,
+    });
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -204,7 +214,8 @@ export class CeloPact {
       functionName: "resolveDispute",
       args: [escrowId, milestoneIndex, winner],
       account: this.account,
-    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+      chain: this.chain,
+    });
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -270,7 +281,8 @@ export class CeloPact {
         functionName: "approve",
         args: [this.contractAddress, amount],
         account: this.account,
-      } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+        chain: this.chain,
+      });
       await this.publicClient.waitForTransactionReceipt({ hash: approveTx });
     }
   }
