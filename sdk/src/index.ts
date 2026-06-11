@@ -10,13 +10,8 @@
  * ```
  */
 export { CeloPact } from "./escrow.js";
-export {
-  createCeloClients,
-  celoCeloSepolia,
-  celoAlfajores,
-  celoMainnet,
-  type CreateCeloClientsOptions,
-} from "./client.js";
+export { createCeloClients, type CreateCeloClientsOptions } from "./client.js";
+export { celoCeloSepolia, celoAlfajores, celoMainnet } from "./networks.js";
 export {
   CELO_NETWORKS,
   getNetwork,

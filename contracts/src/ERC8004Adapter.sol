@@ -65,12 +65,33 @@ contract ERC8004Adapter is IAgentRegistry {
     ///         Range [0, 10000].
     mapping(address => uint256) private _score;
 
+    /// @notice CeloPactEscrow contract authorized to call recordOutcome().
+    ///         Set once via setEscrowContract() immediately after deployment.
+    address public escrowContract;
+
+    /// @notice Deployer allowed to call setEscrowContract() exactly once.
+    address public immutable deployer;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Errors
+    // ─────────────────────────────────────────────────────────────────────────
+
+    error ZeroAddress();
+    error NotNFTOwner();
+    error AlreadyLinked();
+    error EscrowAlreadySet();
+    error UnauthorizedCaller(address caller);
+    error NotDeployer(address caller);
+
     // ─────────────────────────────────────────────────────────────────────────
     // Events
     // ─────────────────────────────────────────────────────────────────────────
 
     /// @notice Emitted when an agent links their wallet to an ERC-8004 agentId.
     event AgentLinked(address indexed agent, uint256 indexed agentId);
+
+    /// @notice Emitted when the CeloPactEscrow contract is authorized.
+    event EscrowContractSet(address indexed escrow);
 
     // ─────────────────────────────────────────────────────────────────────────
     // Constructor
@@ -79,8 +100,12 @@ contract ERC8004Adapter is IAgentRegistry {
     /// @param identityRegistry_   ERC-8004 Identity Registry address.
     /// @param reputationRegistry_ ERC-8004 Reputation Registry address.
     constructor(address identityRegistry_, address reputationRegistry_) {
+        if (identityRegistry_ == address(0) || reputationRegistry_ == address(0)) {
+            revert ZeroAddress();
+        }
         identityRegistry   = IERC8004Identity(identityRegistry_);
         reputationRegistry = IERC8004Reputation(reputationRegistry_);
+        deployer           = msg.sender;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -93,11 +118,23 @@ contract ERC8004Adapter is IAgentRegistry {
     ///      Initial reputation score is set to 500 (above MIN_REPUTATION = 100).
     /// @param agentId The ERC-8004 token ID returned by `identityRegistry.register()`.
     function linkAgent(uint256 agentId) external {
-        require(identityRegistry.ownerOf(agentId) == msg.sender, "ERC8004Adapter: not NFT owner");
-        require(agentIds[msg.sender] == 0, "ERC8004Adapter: already linked");
+        if (identityRegistry.ownerOf(agentId) != msg.sender) revert NotNFTOwner();
+        if (agentIds[msg.sender] != 0) revert AlreadyLinked();
         agentIds[msg.sender] = agentId;
         _score[msg.sender]   = 500;
         emit AgentLinked(msg.sender, agentId);
+    }
+
+    /// @notice Authorizes the deployed CeloPactEscrow to call recordOutcome().
+    /// @dev Callable once, immediately after both contracts are deployed.
+    ///      The deploy script calls this in the same broadcast transaction.
+    /// @param escrow Address of the deployed CeloPactEscrow contract.
+    function setEscrowContract(address escrow) external {
+        if (msg.sender != deployer) revert NotDeployer(msg.sender);
+        if (escrow == address(0)) revert ZeroAddress();
+        if (escrowContract != address(0)) revert EscrowAlreadySet();
+        escrowContract = escrow;
+        emit EscrowContractSet(escrow);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -129,6 +166,8 @@ contract ERC8004Adapter is IAgentRegistry {
     ///      The giveFeedback call is wrapped in try/catch — CeloPact will still
     ///      release payment even if the reputation write fails.
     function recordOutcome(address agent, bool success) external override {
+        if (msg.sender != escrowContract) revert UnauthorizedCaller(msg.sender);
+
         uint256 id = agentIds[agent];
         if (id == 0) return;
 

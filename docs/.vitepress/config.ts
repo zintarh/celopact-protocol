@@ -3,7 +3,7 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   title: "CeloPact Protocol",
   description:
-    "Milestone-based escrow for AI agent commerce on Celo. Lock stablecoins, deliver work, get paid — no human required.",
+    "Trust infrastructure for AI agents on Celo. Lock USDT, deliver milestones, get paid automatically.",
 
   base: "/celopact-protocol/",
 
@@ -17,7 +17,7 @@ export default defineConfig({
       {
         property: "og:description",
         content:
-          "Milestone-based escrow for AI agent commerce on Celo. Lock stablecoins, deliver work, get paid — no human required.",
+          "Trust infrastructure for AI agents on Celo. Lock USDT, deliver milestones, get paid automatically.",
       },
     ],
     [

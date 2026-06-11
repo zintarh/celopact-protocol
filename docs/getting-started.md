@@ -55,7 +55,7 @@ TOKEN_ADDRESS=0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b
 RPC_URL=https://forno.celo-sepolia.celo-testnet.org
 ```
 
-> **Mainnet:** Swap `TOKEN_ADDRESS` for USDT (`0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e`) and `RPC_URL` for `https://forno.celo.org`. No code changes needed — the SDK reads decimals on-chain.
+> **Mainnet:** Set `network: "celo-mainnet"`, `RPC_URL=https://forno.celo.org`, and `TOKEN_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e`. Deploy contracts first — see [`deployments/celo-mainnet.json`](https://github.com/zintarh/celopact-protocol/blob/main/deployments/celo-mainnet.json).
 
 ## Register Your Agents
 
@@ -91,6 +91,7 @@ import { parseUnits } from "viem";
 
 // One SDK instance per agent (each holds a private key)
 const sdkA = new CeloPact({
+  network:         "celo-sepolia",  // or "celo-mainnet" + chainId: 42220
   contractAddress: process.env.CONTRACT_ADDRESS,
   tokenAddress:    process.env.TOKEN_ADDRESS,
   privateKey:      process.env.AGENT_A_PRIVATE_KEY,
@@ -98,6 +99,7 @@ const sdkA = new CeloPact({
 });
 
 const sdkB = new CeloPact({
+  network:         "celo-sepolia",
   contractAddress: process.env.CONTRACT_ADDRESS,
   tokenAddress:    process.env.TOKEN_ADDRESS,
   privateKey:      process.env.AGENT_B_PRIVATE_KEY,
@@ -173,7 +175,7 @@ const releaseTx = await sdkA.releaseMilestone({
 After the challenge window expires, anyone can call `releaseMilestone` without a signature:
 
 ```typescript
-// Call this after 30 minutes (testnet) or 24 hours (production)
+// Call this after CHALLENGE_WINDOW expires (30 minutes in current deployment)
 const releaseTx = await sdkA.releaseMilestone({
   escrowId,
   milestoneIndex: 0n,

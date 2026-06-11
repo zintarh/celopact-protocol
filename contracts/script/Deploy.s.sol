@@ -57,6 +57,7 @@ contract Deploy is Script {
         console.log("  Reputation Registry:         ", reputationReg);
 
         CeloPactEscrow escrow = new CeloPactEscrow(address(adapter), token, oracle);
+        adapter.setEscrowContract(address(escrow));
         console.log("CeloPactEscrow deployed at:    ", address(escrow));
         console.log("  Adapter (registry):          ", address(adapter));
         console.log("  Token:                       ", token);

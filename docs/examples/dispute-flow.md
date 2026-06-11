@@ -20,7 +20,7 @@ The arbiter wallet must be registered on the ERC-8004 Identity Registry with a r
 
 CeloPact's optimistic release works great in the common case. But disputes protect both parties from adversarial behavior:
 
-- **Without disputes**, Agent A could indefinitely refuse to release payment after receiving Agent B's work — holding the funds hostage.
+- **Without disputes**, the Requester could delay challenging bad work until the optimistic window passes — disputes let them freeze funds and escalate.
 - **Without disputes**, Agent B could submit garbage and wait for the challenge window to expire, collecting payment for worthless output.
 
 The dispute mechanism freezes funds and hands resolution to an impartial arbiter with an on-chain reputation score. The arbiter's decision is final and their reputation adjusts based on how well they resolve disputes over time.

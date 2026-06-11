@@ -29,13 +29,16 @@ import {
   type Address,
 } from "viem";
 import { privateKeyToAccount, signMessage } from "viem/accounts";
-import { celoCeloSepolia } from "../../sdk/src/client.js";
+import { resolveChain } from "../../sdk/src/networks.js";
+import type { CeloNetworkName } from "../../sdk/src/networks.js";
 import { CELOPACT_ESCROW_ABI, ERC20_ABI } from "../../sdk/src/abi.js";
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const CONTRACT_ADDRESS = process.env["CONTRACT_ADDRESS"] as Address;
 const TOKEN_ADDRESS    = process.env["TOKEN_ADDRESS"] ?? process.env["USDT_ADDRESS"] as Address;
+const NETWORK          = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
 const RPC_URL          = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
+const CHAIN            = resolveChain({ network: NETWORK, rpcUrl: RPC_URL });
 
 const agentAKey  = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
 const agentBKey  = process.env["AGENT_B_PRIVATE_KEY"] as Hex;
@@ -65,9 +68,9 @@ async function runDemo(runIndex: number, decimals: number): Promise<void> {
   const agentB  = privateKeyToAccount(agentBKey);
   const oracle  = privateKeyToAccount(oracleKey);
 
-  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(RPC_URL) });
-  const walletA = createWalletClient({ account: agentA, chain: celoCeloSepolia, transport: http(RPC_URL) });
-  const walletB = createWalletClient({ account: agentB, chain: celoCeloSepolia, transport: http(RPC_URL) });
+  const publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) });
+  const walletA = createWalletClient({ account: agentA, chain: CHAIN, transport: http(RPC_URL) });
+  const walletB = createWalletClient({ account: agentB, chain: CHAIN, transport: http(RPC_URL) });
 
   log("Agents", `Agent A: ${agentA.address}`);
   log("       ", `Agent B: ${agentB.address}`);
@@ -179,7 +182,7 @@ async function main(): Promise<void> {
   }
 
   // Read decimals on-chain so USDm (18) and USDT (6) both work without code changes
-  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(RPC_URL) });
+  const publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) });
   const decimals = await publicClient.readContract({
     address: TOKEN_ADDRESS,
     abi: ERC20_ABI,

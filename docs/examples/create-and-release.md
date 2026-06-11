@@ -23,27 +23,20 @@ npx tsx index.ts
 
 ## The Oracle Signature
 
-The most important detail in this example is how the oracle signature is constructed. The contract verifies it with `ecrecover`, so the message must be signed as a raw hash — not as an EIP-191 "Ethereum Signed Message":
+The oracle signs `keccak256(abi.encodePacked(escrowId, milestoneIndex, outputHash))` as a **32-byte raw message**. viem applies the standard `\x19Ethereum Signed Message:\n32` prefix — the contract reconstructs the same hash before `ecrecover`.
 
 ```typescript
-// The contract reconstructs the signer from:
-//   keccak256(abi.encodePacked(escrowId, milestoneIndex, outputHash))
 const messageHash = keccak256(
-  encodePacked(
-    ["uint256", "uint256", "bytes32"],
-    [escrowId, 0n, outputHash]
-  )
+  encodePacked(["uint256", "uint256", "bytes32"], [escrowId, 0n, outputHash])
 );
 
-// Sign as raw bytes — NOT as a human-readable string.
-// Using the string form would add the EIP-191 prefix and break verification.
 const oracleSignature = await signMessage({
   privateKey: ORACLE_KEY,
   message: { raw: Buffer.from(messageHash.slice(2), "hex") },
 });
 ```
 
-If you use `message: "some string"` instead of `message: { raw: ... }`, `ecrecover` on the contract side will return a different address than the oracle's, and the transaction will revert with an access control error.
+Do not use `message: "some string"` — that produces a different hash and verification will fail.
 
 ## Walkthrough
 
@@ -75,7 +68,7 @@ const outputHash = keccak256(
 await sdkB.submitMilestone({ escrowId, milestoneIndex: 0n, outputHash });
 ```
 
-This transitions milestone 0 to `SUBMITTED` state and opens a 30-minute challenge window on Celo Sepolia (24 hours on mainnet).
+This transitions milestone 0 to `SUBMITTED` state and opens a **30-minute challenge window**.
 
 ### Step 3 — Oracle Attests
 

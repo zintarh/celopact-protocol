@@ -23,7 +23,8 @@ import {
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { celoCeloSepolia } from "../../sdk/src/client.js";
+import { resolveChain } from "../../sdk/src/networks.js";
+import type { CeloNetworkName } from "../../sdk/src/networks.js";
 
 const ERC8004_IDENTITY_REGISTRY: Address    = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const ERC8004_REPUTATION_REGISTRY: Address  = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
@@ -116,9 +117,11 @@ function buildAgentURI(agentAddress: Address, label: string): string {
 // ── Core registration logic ───────────────────────────────────────────────────
 async function registerAgent(label: string, agentKey: Hex, adapterAddress: Address): Promise<void> {
   const account      = privateKeyToAccount(agentKey);
+  const network      = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
   const rpcUrl       = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
-  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(rpcUrl) });
-  const walletClient = createWalletClient({ account, chain: celoCeloSepolia, transport: http(rpcUrl) });
+  const chain        = resolveChain({ network, rpcUrl });
+  const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
+  const walletClient = createWalletClient({ account, chain, transport: http(rpcUrl) });
 
   console.log(`\n[Register] ${label}`);
   console.log(`           Wallet: ${account.address}`);
@@ -157,7 +160,6 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
   const registerReceipt = await publicClient.waitForTransactionReceipt({ hash: registerTx });
   console.log(`           Registered on ERC-8004 ✓  tx: ${registerTx}`);
 
-  // Extract agentId from Transfer event (ERC-721 mint: from == 0x0)
   let agentId: bigint | undefined;
   for (const log of registerReceipt.logs) {
     try {
@@ -202,7 +204,8 @@ async function main(): Promise<void> {
   }
 
   console.log("\n  CELOPACT PROTOCOL — ERC-8004 REGISTRATION");
-  console.log(`  Network:   Celo Sepolia (chain ID 11142220)`);
+  const network = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
+  console.log(`  Network:   ${network}`);
   console.log(`  Identity:  ${ERC8004_IDENTITY_REGISTRY}`);
   console.log(`  Adapter:   ${adapterAddress}`);
   console.log(`  8004scan:  https://celo-sepolia.blockscout.com`);

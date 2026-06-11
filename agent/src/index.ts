@@ -15,12 +15,15 @@
 import "dotenv/config";
 import { createPublicClient, http, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { celoCeloSepolia } from "../../sdk/src/client.js";
+import { resolveChain } from "../../sdk/src/networks.js";
+import type { CeloNetworkName } from "../../sdk/src/networks.js";
 import { CELOPACT_ESCROW_ABI } from "../../sdk/src/abi.js";
 
 const CONTRACT_ADDRESS  = process.env["CONTRACT_ADDRESS"] as Address;
 const REGISTRY_ADDRESS  = process.env["REGISTRY_ADDRESS"] as Address;
+const NETWORK           = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
 const RPC_URL           = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
+const CHAIN             = resolveChain({ network: NETWORK, rpcUrl: RPC_URL });
 const agentAKey         = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
 
 const REGISTRY_ABI = [
@@ -42,7 +45,7 @@ const REGISTRY_ABI = [
 
 async function main(): Promise<void> {
   const agentA      = privateKeyToAccount(agentAKey);
-  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(RPC_URL) });
+  const publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) });
 
   console.log("\n  CELOPACT PROTOCOL AGENT");
   console.log("  ─────────────────────────────────────────────");

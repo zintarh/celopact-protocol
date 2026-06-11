@@ -25,9 +25,19 @@ contract CeloPactEscrow is ReentrancyGuard {
     /// @notice Minimum ERC-8004 reputation score required to open an escrow.
     uint256 public constant MIN_REPUTATION = 100;
 
+    /// @notice Minimum reputation required for a dispute arbiter.
+    uint256 public constant MIN_ARBITER_REPUTATION = 100;
+
     /// @notice Duration of the challenge window after milestone submission.
     ///         In production this should be 24 hours. 30 minutes for demo clarity.
     uint256 public constant CHALLENGE_WINDOW = 30 minutes;
+
+    /// @notice Time Agent B has to submit each pending milestone before Agent A can refund.
+    ///         Production: 7–30 days. Demo: 1 day.
+    uint256 public constant MILESTONE_SUBMISSION_DEADLINE = 1 days;
+
+    /// @notice Time an arbiter has to resolve a dispute before funds default to Agent A.
+    uint256 public constant DISPUTE_RESOLUTION_DEADLINE = 1 days;
 
     // ─────────────────────────────────────────────────────────
     // Types
@@ -39,14 +49,17 @@ contract CeloPactEscrow is ReentrancyGuard {
         SUBMITTED,  // Agent B submitted — challenge window is open
         RELEASED,   // Payment has been transferred to Agent B
         DISPUTED,   // Agent A raised a dispute — awaiting arbiter
-        RESOLVED    // Arbiter ruled — payment went to winner
+        RESOLVED,   // Arbiter ruled — payment went to winner
+        CANCELLED   // Agent A refunded — Agent B never submitted in time
     }
 
     /// @notice A single deliverable within an escrow agreement.
     struct Milestone {
-        uint256 amount;         // USDT amount (6 decimals) locked for this milestone
+        uint256 amount;         // Token amount locked for this milestone
         bytes32 outputHash;     // Hash of Agent B's submitted work product
         uint256 submittedAt;    // Block timestamp when Agent B submitted
+        uint256 disputedAt;     // Block timestamp when dispute was opened (0 if none)
+        uint256 finalizedAt;    // Block timestamp when milestone reached a terminal state
         MilestoneState state;   // Current lifecycle state
         address arbiter;        // Set when dispute is opened
     }
@@ -56,7 +69,7 @@ contract CeloPactEscrow is ReentrancyGuard {
         address agentA;         // Orchestrator — locked funds, opened the escrow
         address agentB;         // Specialist — completes milestones, receives payment
         address token;          // ERC-20 payment token (USDT on Celo)
-        uint256 totalAmount;    // Total USDT locked across all milestones
+        uint256 totalAmount;    // Total tokens locked across all milestones
         uint256 createdAt;      // Block timestamp of escrow creation
         bool active;            // False once all milestones are finalized
         Milestone[] milestones;
@@ -76,7 +89,7 @@ contract CeloPactEscrow is ReentrancyGuard {
     /// @dev Demo oracle: a wallet we control signs attestations off-chain.
     ///      Production upgrade: replace with Phala TEE attestation verifier address.
     ///      The ecrecover verification interface is identical in both cases.
-    address public oracle;
+    address public immutable oracle;
 
     /// @notice Incrementing counter used to generate unique escrow IDs.
     uint256 private _escrowCounter;
@@ -129,14 +142,32 @@ contract CeloPactEscrow is ReentrancyGuard {
         uint256 amount
     );
 
+    /// @notice Emitted when Agent A refunds a milestone Agent B failed to submit in time.
+    event MilestoneCancelled(
+        uint256 indexed escrowId,
+        uint256 indexed milestoneIndex,
+        address indexed recipient,
+        uint256 amount
+    );
+
+    /// @notice Emitted when a dispute times out and funds default to Agent A.
+    event DisputeDefaulted(
+        uint256 indexed escrowId,
+        uint256 indexed milestoneIndex,
+        address indexed recipient,
+        uint256 amount
+    );
+
     // ─────────────────────────────────────────────────────────
     // Errors
     // ─────────────────────────────────────────────────────────
 
+    error ZeroAddress();
+    error SameAgent();
     error NotRegistered(address agent);
     error ReputationTooLow(address agent, uint256 required, uint256 actual);
-    error MilestoneLengthMismatch();
     error NoMilestones();
+    error ZeroMilestoneAmount(uint256 milestoneIndex);
     error EscrowNotActive(uint256 escrowId);
     error NotAgentB(address caller, address agentB);
     error NotAgentA(address caller, address agentA);
@@ -149,6 +180,11 @@ contract CeloPactEscrow is ReentrancyGuard {
     error NotArbiter(address caller, address arbiter);
     error MilestoneNotDisputed(uint256 milestoneIndex, MilestoneState state);
     error InvalidWinner(address winner, address agentA, address agentB);
+    error InvalidArbiter(address arbiter, address agentA, address agentB);
+    error PreviousMilestoneIncomplete(uint256 milestoneIndex);
+    error SubmissionDeadlineNotReached(uint256 deadline);
+    error DisputeDeadlineNotReached(uint256 deadline);
+    error InvalidEscrowId(uint256 escrowId);
 
     // ─────────────────────────────────────────────────────────
     // Constructor
@@ -158,6 +194,9 @@ contract CeloPactEscrow is ReentrancyGuard {
     /// @param _usdt Address of the USDT token contract on Celo.
     /// @param _oracle Address of the oracle wallet authorized to sign attestations.
     constructor(address _registry, address _usdt, address _oracle) {
+        if (_registry == address(0) || _usdt == address(0) || _oracle == address(0)) {
+            revert ZeroAddress();
+        }
         registry = IAgentRegistry(_registry);
         usdt = IERC20(_usdt);
         oracle = _oracle;
@@ -171,22 +210,32 @@ contract CeloPactEscrow is ReentrancyGuard {
     /// @dev Both agents must be registered in the ERC-8004 registry with sufficient
     ///      reputation. Agent A must have approved this contract to spend `totalAmount`.
     /// @param agentB The ERC-8004 registered address of the specialist agent being hired.
-    /// @param amounts USDT amount (6 decimals) allocated to each milestone.
+    /// @param amounts Token amount allocated to each milestone (must be > 0).
     /// @return escrowId The unique identifier for this escrow agreement.
     function createEscrow(
         address agentB,
         uint256[] calldata amounts
     ) external nonReentrant returns (uint256 escrowId) {
+        if (agentB == address(0)) revert ZeroAddress();
+        if (agentB == msg.sender) revert SameAgent();
         if (!registry.isRegistered(msg.sender)) revert NotRegistered(msg.sender);
         if (!registry.isRegistered(agentB)) revert NotRegistered(agentB);
 
         uint256 agentAScore = registry.getReputationScore(msg.sender);
-        if (agentAScore < MIN_REPUTATION) revert ReputationTooLow(msg.sender, MIN_REPUTATION, agentAScore);
+        if (agentAScore < MIN_REPUTATION) {
+            revert ReputationTooLow(msg.sender, MIN_REPUTATION, agentAScore);
+        }
+
+        uint256 agentBScore = registry.getReputationScore(agentB);
+        if (agentBScore < MIN_REPUTATION) {
+            revert ReputationTooLow(agentB, MIN_REPUTATION, agentBScore);
+        }
 
         if (amounts.length == 0) revert NoMilestones();
 
         uint256 total = 0;
         for (uint256 i = 0; i < amounts.length; i++) {
+            if (amounts[i] == 0) revert ZeroMilestoneAmount(i);
             total += amounts[i];
         }
 
@@ -204,22 +253,19 @@ contract CeloPactEscrow is ReentrancyGuard {
                 amount: amounts[i],
                 outputHash: bytes32(0),
                 submittedAt: 0,
+                disputedAt: 0,
+                finalizedAt: 0,
                 state: MilestoneState.PENDING,
                 arbiter: address(0)
             }));
         }
 
-        // Transfer USDT from Agent A into this contract — CEI: state updated above
         usdt.safeTransferFrom(msg.sender, address(this), total);
 
         emit EscrowCreated(escrowId, msg.sender, agentB, total, amounts.length);
     }
 
     /// @notice Agent B submits a completed milestone, opening the challenge window.
-    /// @dev Only callable by the agentB registered in this escrow.
-    ///      The outputHash is a keccak256 of the deliverable (Agent A can verify off-chain).
-    ///      After submission, Agent A has CHALLENGE_WINDOW to raise a dispute.
-    ///      If no dispute is raised, anyone can call releaseMilestone() after the window.
     /// @param escrowId The escrow this milestone belongs to.
     /// @param milestoneIndex Index into the milestones array (0-based).
     /// @param outputHash keccak256 hash of the work product submitted by Agent B.
@@ -227,10 +273,18 @@ contract CeloPactEscrow is ReentrancyGuard {
         uint256 escrowId,
         uint256 milestoneIndex,
         bytes32 outputHash
-    ) external {
+    ) external nonReentrant {
         Escrow storage escrow = _escrows[escrowId];
+        if (escrow.agentA == address(0)) revert InvalidEscrowId(escrowId);
         if (!escrow.active) revert EscrowNotActive(escrowId);
         if (escrow.agentB != msg.sender) revert NotAgentB(msg.sender, escrow.agentB);
+
+        if (milestoneIndex > 0) {
+            MilestoneState prevState = escrow.milestones[milestoneIndex - 1].state;
+            if (prevState != MilestoneState.RELEASED && prevState != MilestoneState.RESOLVED) {
+                revert PreviousMilestoneIncomplete(milestoneIndex);
+            }
+        }
 
         Milestone storage milestone = escrow.milestones[milestoneIndex];
         if (milestone.state != MilestoneState.PENDING) {
@@ -250,11 +304,6 @@ contract CeloPactEscrow is ReentrancyGuard {
     }
 
     /// @notice Releases payment for a submitted milestone to Agent B.
-    ///         Can be called by anyone once the challenge window has expired,
-    ///         or immediately with a valid oracle-signed attestation.
-    /// @dev Optimistic path: no signature required after CHALLENGE_WINDOW.
-    ///      Fast path: oracle signs attestation off-chain, attached as signature.
-    ///      Production upgrade: replace oracle address with Phala TEE verifier.
     /// @param escrowId The escrow containing this milestone.
     /// @param milestoneIndex The milestone index to release.
     /// @param oracleSignature Optional oracle signature (pass empty bytes for optimistic path).
@@ -264,6 +313,7 @@ contract CeloPactEscrow is ReentrancyGuard {
         bytes calldata oracleSignature
     ) external nonReentrant {
         Escrow storage escrow = _escrows[escrowId];
+        if (escrow.agentA == address(0)) revert InvalidEscrowId(escrowId);
         if (!escrow.active) revert EscrowNotActive(escrowId);
 
         Milestone storage milestone = escrow.milestones[milestoneIndex];
@@ -272,7 +322,6 @@ contract CeloPactEscrow is ReentrancyGuard {
         }
 
         if (oracleSignature.length > 0) {
-            // Fast path: verify oracle attestation
             bytes32 messageHash = keccak256(
                 abi.encodePacked(escrowId, milestoneIndex, milestone.outputHash)
             );
@@ -282,29 +331,25 @@ contract CeloPactEscrow is ReentrancyGuard {
             address signer = _recoverSigner(ethSignedHash, oracleSignature);
             if (signer != oracle) revert InvalidOracleSignature();
         } else {
-            // Optimistic path: challenge window must have expired
             uint256 windowEnd = milestone.submittedAt + CHALLENGE_WINDOW;
             if (block.timestamp < windowEnd) revert ChallengeWindowOpen(windowEnd);
         }
 
-        // CEI: update state before transfer
         milestone.state = MilestoneState.RELEASED;
+        milestone.finalizedAt = block.timestamp;
         uint256 amount = milestone.amount;
         address recipient = escrow.agentB;
 
-        // Update reputation — Agent B completed successfully
         registry.recordOutcome(escrow.agentB, true);
 
         usdt.safeTransfer(recipient, amount);
+
+        _deactivateIfComplete(escrow);
 
         emit MilestoneReleased(escrowId, milestoneIndex, recipient, amount);
     }
 
     /// @notice Agent A disputes a submitted milestone within the challenge window.
-    ///         Selects the highest-reputation ERC-8004 registered agent as arbiter.
-    /// @dev Arbiter is the account with the highest reputation score from a pre-approved
-    ///      list. In production this queries the ERC-8004 Reputation Registry.
-    ///      For the demo, the arbiter is passed as a parameter by Agent A.
     /// @param escrowId The escrow containing the disputed milestone.
     /// @param milestoneIndex The milestone index being disputed.
     /// @param proposedArbiter Address of the proposed arbiter (must be ERC-8004 registered).
@@ -312,8 +357,9 @@ contract CeloPactEscrow is ReentrancyGuard {
         uint256 escrowId,
         uint256 milestoneIndex,
         address proposedArbiter
-    ) external {
+    ) external nonReentrant {
         Escrow storage escrow = _escrows[escrowId];
+        if (escrow.agentA == address(0)) revert InvalidEscrowId(escrowId);
         if (!escrow.active) revert EscrowNotActive(escrowId);
         if (escrow.agentA != msg.sender) revert NotAgentA(msg.sender, escrow.agentA);
 
@@ -326,18 +372,23 @@ contract CeloPactEscrow is ReentrancyGuard {
         if (block.timestamp >= windowEnd) revert ChallengeWindowClosed(windowEnd);
 
         if (!registry.isRegistered(proposedArbiter)) revert NotRegistered(proposedArbiter);
+        if (proposedArbiter == escrow.agentA || proposedArbiter == escrow.agentB) {
+            revert InvalidArbiter(proposedArbiter, escrow.agentA, escrow.agentB);
+        }
+
+        uint256 arbiterScore = registry.getReputationScore(proposedArbiter);
+        if (arbiterScore < MIN_ARBITER_REPUTATION) {
+            revert ReputationTooLow(proposedArbiter, MIN_ARBITER_REPUTATION, arbiterScore);
+        }
 
         milestone.state = MilestoneState.DISPUTED;
         milestone.arbiter = proposedArbiter;
+        milestone.disputedAt = block.timestamp;
 
-        uint256 arbiterScore = registry.getReputationScore(proposedArbiter);
         emit DisputeRaised(escrowId, milestoneIndex, proposedArbiter, arbiterScore);
     }
 
     /// @notice Arbiter resolves a disputed milestone, sending funds to the winner.
-    /// @dev Only callable by the arbiter assigned when the dispute was opened.
-    ///      Winner must be either agentA (refund) or agentB (payment for work).
-    ///      Both agents' reputations are updated based on the outcome.
     /// @param escrowId The escrow containing the disputed milestone.
     /// @param milestoneIndex The disputed milestone index.
     /// @param winner Address of the winning party — must be agentA or agentB.
@@ -347,6 +398,7 @@ contract CeloPactEscrow is ReentrancyGuard {
         address winner
     ) external nonReentrant {
         Escrow storage escrow = _escrows[escrowId];
+        if (escrow.agentA == address(0)) revert InvalidEscrowId(escrowId);
         if (!escrow.active) revert EscrowNotActive(escrowId);
 
         Milestone storage milestone = escrow.milestones[milestoneIndex];
@@ -358,18 +410,81 @@ contract CeloPactEscrow is ReentrancyGuard {
             revert InvalidWinner(winner, escrow.agentA, escrow.agentB);
         }
 
-        // CEI: update state before transfer
         milestone.state = MilestoneState.RESOLVED;
+        milestone.finalizedAt = block.timestamp;
         uint256 amount = milestone.amount;
 
-        // Update both agents' reputations based on who won
         bool agentBWon = (winner == escrow.agentB);
         registry.recordOutcome(escrow.agentB, agentBWon);
         registry.recordOutcome(escrow.agentA, !agentBWon);
 
         usdt.safeTransfer(winner, amount);
 
+        _deactivateIfComplete(escrow);
+
         emit DisputeResolved(escrowId, milestoneIndex, winner, amount);
+    }
+
+    /// @notice Refunds a pending milestone to Agent A when Agent B misses the submission deadline.
+    /// @dev Milestone 0 deadline: escrow.createdAt + MILESTONE_SUBMISSION_DEADLINE.
+    ///      Later milestones: previous milestone.finalizedAt + MILESTONE_SUBMISSION_DEADLINE.
+    /// @param escrowId The escrow containing the stale milestone.
+    /// @param milestoneIndex The pending milestone to refund.
+    function refundStaleMilestone(uint256 escrowId, uint256 milestoneIndex) external nonReentrant {
+        Escrow storage escrow = _escrows[escrowId];
+        if (escrow.agentA == address(0)) revert InvalidEscrowId(escrowId);
+        if (!escrow.active) revert EscrowNotActive(escrowId);
+        if (escrow.agentA != msg.sender) revert NotAgentA(msg.sender, escrow.agentA);
+
+        Milestone storage milestone = escrow.milestones[milestoneIndex];
+        if (milestone.state != MilestoneState.PENDING) {
+            revert MilestoneNotPending(milestoneIndex, milestone.state);
+        }
+
+        uint256 deadline = _submissionDeadline(escrow, milestoneIndex);
+        if (block.timestamp < deadline) revert SubmissionDeadlineNotReached(deadline);
+
+        milestone.state = MilestoneState.CANCELLED;
+        milestone.finalizedAt = block.timestamp;
+        uint256 amount = milestone.amount;
+
+        registry.recordOutcome(escrow.agentB, false);
+
+        usdt.safeTransfer(escrow.agentA, amount);
+
+        _deactivateIfComplete(escrow);
+
+        emit MilestoneCancelled(escrowId, milestoneIndex, escrow.agentA, amount);
+    }
+
+    /// @notice Defaults a disputed milestone to Agent A when the arbiter does not act in time.
+    /// @param escrowId The escrow containing the disputed milestone.
+    /// @param milestoneIndex The disputed milestone index.
+    function defaultDisputeToAgentA(uint256 escrowId, uint256 milestoneIndex) external nonReentrant {
+        Escrow storage escrow = _escrows[escrowId];
+        if (escrow.agentA == address(0)) revert InvalidEscrowId(escrowId);
+        if (!escrow.active) revert EscrowNotActive(escrowId);
+
+        Milestone storage milestone = escrow.milestones[milestoneIndex];
+        if (milestone.state != MilestoneState.DISPUTED) {
+            revert MilestoneNotDisputed(milestoneIndex, milestone.state);
+        }
+
+        uint256 deadline = milestone.disputedAt + DISPUTE_RESOLUTION_DEADLINE;
+        if (block.timestamp < deadline) revert DisputeDeadlineNotReached(deadline);
+
+        milestone.state = MilestoneState.RESOLVED;
+        milestone.finalizedAt = block.timestamp;
+        uint256 amount = milestone.amount;
+
+        registry.recordOutcome(escrow.agentB, false);
+        registry.recordOutcome(escrow.agentA, true);
+
+        usdt.safeTransfer(escrow.agentA, amount);
+
+        _deactivateIfComplete(escrow);
+
+        emit DisputeDefaulted(escrowId, milestoneIndex, escrow.agentA, amount);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -377,12 +492,6 @@ contract CeloPactEscrow is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────
 
     /// @notice Returns the full details of an escrow agreement.
-    /// @param escrowId The escrow identifier.
-    /// @return agentA The orchestrator agent address.
-    /// @return agentB The specialist agent address.
-    /// @return totalAmount Total USDT locked in this escrow.
-    /// @return active Whether the escrow is still active.
-    /// @return milestoneCount Number of milestones in this escrow.
     function getEscrow(uint256 escrowId)
         external
         view
@@ -405,13 +514,6 @@ contract CeloPactEscrow is ReentrancyGuard {
     }
 
     /// @notice Returns the current state and details of a specific milestone.
-    /// @param escrowId The escrow identifier.
-    /// @param milestoneIndex The milestone index (0-based).
-    /// @return amount USDT amount for this milestone.
-    /// @return outputHash Hash of Agent B's submitted work (zero if not yet submitted).
-    /// @return submittedAt Timestamp of submission (zero if not yet submitted).
-    /// @return state Current milestone state.
-    /// @return arbiter Assigned arbiter address (zero address if no dispute).
     function getMilestone(uint256 escrowId, uint256 milestoneIndex)
         external
         view
@@ -427,8 +529,18 @@ contract CeloPactEscrow is ReentrancyGuard {
         return (m.amount, m.outputHash, m.submittedAt, m.state, m.arbiter);
     }
 
+    /// @notice Returns the submission deadline for a pending milestone.
+    function getSubmissionDeadline(uint256 escrowId, uint256 milestoneIndex) external view returns (uint256) {
+        return _submissionDeadline(_escrows[escrowId], milestoneIndex);
+    }
+
+    /// @notice Returns the dispute resolution deadline for a disputed milestone.
+    function getDisputeDeadline(uint256 escrowId, uint256 milestoneIndex) external view returns (uint256) {
+        Milestone storage m = _escrows[escrowId].milestones[milestoneIndex];
+        return m.disputedAt + DISPUTE_RESOLUTION_DEADLINE;
+    }
+
     /// @notice Returns the total number of escrows created (includes closed ones).
-    /// @return count The current escrow counter value.
     function escrowCount() external view returns (uint256 count) {
         return _escrowCounter;
     }
@@ -441,7 +553,7 @@ contract CeloPactEscrow is ReentrancyGuard {
     function _recoverSigner(bytes32 ethSignedHash, bytes calldata signature)
         internal
         pure
-        returns (address)
+        returns (address signer)
     {
         if (signature.length != 65) revert InvalidSignatureLength(signature.length);
         bytes32 r;
@@ -452,6 +564,34 @@ contract CeloPactEscrow is ReentrancyGuard {
             s := calldataload(add(signature.offset, 32))
             v := byte(0, calldataload(add(signature.offset, 64)))
         }
-        return ecrecover(ethSignedHash, v, r, s);
+        signer = ecrecover(ethSignedHash, v, r, s);
+        if (signer == address(0)) revert InvalidOracleSignature();
+    }
+
+    function _submissionDeadline(Escrow storage escrow, uint256 milestoneIndex)
+        internal
+        view
+        returns (uint256)
+    {
+        if (milestoneIndex == 0) {
+            return escrow.createdAt + MILESTONE_SUBMISSION_DEADLINE;
+        }
+        Milestone storage prev = escrow.milestones[milestoneIndex - 1];
+        if (prev.finalizedAt == 0) revert PreviousMilestoneIncomplete(milestoneIndex);
+        return prev.finalizedAt + MILESTONE_SUBMISSION_DEADLINE;
+    }
+
+    function _deactivateIfComplete(Escrow storage escrow) internal {
+        uint256 len = escrow.milestones.length;
+        for (uint256 i = 0; i < len; i++) {
+            MilestoneState s = escrow.milestones[i].state;
+            if (
+                s != MilestoneState.RELEASED && s != MilestoneState.RESOLVED
+                    && s != MilestoneState.CANCELLED
+            ) {
+                return;
+            }
+        }
+        escrow.active = false;
     }
 }

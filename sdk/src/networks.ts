@@ -1,5 +1,34 @@
-import type { Address, Chain } from "viem";
-import { celoCeloSepolia, celoMainnet } from "./client.js";
+import { defineChain, type Address, type Chain } from "viem";
+
+/** Celo Sepolia testnet — chain ID 11142220. */
+export const celoCeloSepolia: Chain = defineChain({
+  id: 11142220,
+  name: "Celo Sepolia",
+  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] },
+  },
+  blockExplorers: {
+    default: { name: "Blockscout", url: "https://celo-sepolia.blockscout.com" },
+  },
+  testnet: true,
+});
+
+/** @deprecated Alfajores was replaced by Celo Sepolia (March 2025). */
+export const celoAlfajores = celoCeloSepolia;
+
+/** Celo mainnet — chain ID 42220. */
+export const celoMainnet: Chain = defineChain({
+  id: 42220,
+  name: "Celo",
+  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://forno.celo.org"] },
+  },
+  blockExplorers: {
+    default: { name: "Celoscan", url: "https://celoscan.io" },
+  },
+});
 
 /** Supported Celo networks. SDK is network-agnostic — pick one via `network` or `chainId`. */
 export type CeloNetworkName = "celo-sepolia" | "celo-mainnet";
@@ -16,14 +45,12 @@ export interface NetworkConfig {
     reputationRegistry: Address;
   };
   tokens: {
-    /** Native Celo USDT (6 decimals on mainnet and Sepolia). */
     usdt: Address;
-    /** USDm on Celo Sepolia testnet (18 decimals, from faucet). */
     usdm?: Address;
   };
 }
 
-/** Canonical network presets — Sepolia (deployed) and Mainnet (SDK-ready, deploy with Deploy.s.sol). */
+/** Canonical network presets — Sepolia (deployed) and Mainnet (SDK-ready). */
 export const CELO_NETWORKS: Record<CeloNetworkName, NetworkConfig> = {
   "celo-sepolia": {
     name: "celo-sepolia",
@@ -61,7 +88,6 @@ const CHAIN_ID_TO_NETWORK = new Map<number, CeloNetworkName>(
   Object.values(CELO_NETWORKS).map((n) => [n.chainId, n.name])
 );
 
-/** Returns the network preset for a chain ID. */
 export function getNetworkByChainId(chainId: number): NetworkConfig {
   const name = CHAIN_ID_TO_NETWORK.get(chainId);
   if (!name) {
@@ -72,7 +98,6 @@ export function getNetworkByChainId(chainId: number): NetworkConfig {
   return CELO_NETWORKS[name];
 }
 
-/** Returns the network preset by name. */
 export function getNetwork(name: CeloNetworkName): NetworkConfig {
   return CELO_NETWORKS[name];
 }
@@ -83,10 +108,6 @@ export interface ResolveChainOptions {
   rpcUrl?: string;
 }
 
-/**
- * Resolves the viem Chain for a Celo network.
- * Priority: `network` → `chainId` → infer from rpcUrl (sepolia/testnet → Sepolia, else mainnet).
- */
 export function resolveChain(options: ResolveChainOptions): Chain {
   if (options.network) return CELO_NETWORKS[options.network].chain;
   if (options.chainId !== undefined) return getNetworkByChainId(options.chainId).chain;
@@ -98,7 +119,6 @@ export function resolveChain(options: ResolveChainOptions): Chain {
   return celoMainnet;
 }
 
-/** Resolves the full network config from options (same priority as resolveChain). */
 export function resolveNetwork(options: ResolveChainOptions): NetworkConfig {
   if (options.network) return CELO_NETWORKS[options.network];
   if (options.chainId !== undefined) return getNetworkByChainId(options.chainId);

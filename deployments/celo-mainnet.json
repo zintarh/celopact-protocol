@@ -1,0 +1,23 @@
+{
+  "network": "Celo Mainnet",
+  "chainId": 42220,
+  "status": "sdk-ready",
+  "note": "Deploy with contracts/script/Deploy.s.sol --rpc-url celo. SDK supports mainnet via network: 'celo-mainnet'.",
+  "rpc": "https://forno.celo.org",
+  "explorer": "https://celoscan.io",
+  "erc8004": {
+    "identityRegistry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    "reputationRegistry": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63"
+  },
+  "contracts": {
+    "ERC8004Adapter": { "address": null, "explorer": null },
+    "CeloPactEscrow": { "address": null, "explorer": null }
+  },
+  "tokens": {
+    "USDT": {
+      "address": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
+      "symbol": "USDT",
+      "decimals": 6
+    }
+  }
+}
