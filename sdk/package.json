@@ -1,0 +1,26 @@
+{
+  "name": "@celopact/sdk",
+  "version": "0.1.0",
+  "description": "The open-source trust SDK for agent-to-agent commerce on Celo. Milestone-based escrow with ERC-8004 identity verification.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["celo", "escrow", "ai-agents", "erc-8004", "web3", "celopact"],
+  "license": "MIT",
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

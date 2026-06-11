@@ -1,0 +1,21 @@
+{
+  "name": "celopact-agent",
+  "version": "0.1.0",
+  "description": "The CeloPact Agent — an ERC-8004 registered agent that demonstrates milestone-based escrow on Celo.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "register": "tsx src/register.ts",
+    "demo": "tsx src/demo.ts",
+    "start": "tsx src/index.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "viem": "^2.21.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "tsx": "^4.7.0"
+  }
+}

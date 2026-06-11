@@ -1,0 +1,18 @@
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# Node
+node_modules/
+agent/node_modules/
+sdk/node_modules/
+agent/dist/
+sdk/dist/
+
+# Environment
+.env
+contracts/.env
+
+# OS
+.DS_Store

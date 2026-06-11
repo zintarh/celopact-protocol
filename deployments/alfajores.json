@@ -1,0 +1,21 @@
+{
+  "network": "Celo Alfajores",
+  "chainId": 44787,
+  "deployedAt": "FILL_IN_DATE",
+  "contracts": {
+    "MockAgentRegistry": {
+      "address": "FILL_IN_AFTER_DEPLOY",
+      "celoscan": "https://alfajores.celoscan.io/address/FILL_IN_AFTER_DEPLOY"
+    },
+    "CeloPactEscrow": {
+      "address": "FILL_IN_AFTER_DEPLOY",
+      "celoscan": "https://alfajores.celoscan.io/address/FILL_IN_AFTER_DEPLOY",
+      "constructorArgs": {
+        "registry": "FILL_IN_AFTER_DEPLOY",
+        "usdt": "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
+        "oracle": "FILL_IN_AFTER_DEPLOY"
+      }
+    }
+  },
+  "demoTxHashes": []
+}
