@@ -6,14 +6,14 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepare": "npm run build"
   },
   "keywords": ["celo", "escrow", "ai-agents", "erc-8004", "web3", "celopact"],
   "license": "MIT",

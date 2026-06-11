@@ -1,4 +1,4 @@
-import { getContract, keccak256, encodePacked, type Address, type Hex } from "viem";
+import { decodeEventLog, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { createCeloClients } from "./client.js";
 import { CELOPACT_ESCROW_ABI, ERC20_ABI } from "./abi.js";
@@ -23,27 +23,27 @@ import type {
  *
  * const sdk = new CeloPact({
  *   contractAddress: "0x...",
- *   usdtAddress: "0xd077A400968890Eacc75cdc901F0356c943e4fDb", // Celo Sepolia USDT
+ *   tokenAddress: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b", // USDm on Celo Sepolia
  *   privateKey: "0x...",
  *   rpcUrl: "https://forno.celo-sepolia.celo-testnet.org",
  * });
  *
  * const { escrowId } = await sdk.createEscrow({
  *   agentB: "0x...",
- *   amounts: [300_000_000n, 200_000_000n], // 300 USDT + 200 USDT (6 decimals)
+ *   amounts: [1_000_000_000_000_000n, 2_000_000_000_000_000n], // 0.001 + 0.002 USDm (18 decimals)
  * });
  * ```
  */
 export class CeloPact {
   private readonly contractAddress: Address;
-  private readonly usdtAddress: Address;
+  private readonly tokenAddress: Address;
   private readonly account: ReturnType<typeof privateKeyToAccount>;
   private readonly publicClient: ReturnType<typeof createCeloClients>["publicClient"];
   private readonly walletClient: ReturnType<typeof createCeloClients>["walletClient"];
 
   constructor(config: CeloPactConfig) {
     this.contractAddress = config.contractAddress;
-    this.usdtAddress     = config.usdtAddress;
+    this.tokenAddress    = config.tokenAddress;
     this.account         = privateKeyToAccount(config.privateKey);
     const { publicClient, walletClient } = createCeloClients(config.privateKey, config.rpcUrl);
     this.publicClient = publicClient;
@@ -60,17 +60,17 @@ export class CeloPact {
   // ─────────────────────────────────────────────────────────────────────────
 
   /**
-   * Creates a milestone-based escrow and locks USDT from Agent A.
-   * Automatically approves the escrow contract to spend USDT if needed.
+   * Creates a milestone-based escrow and locks tokens from Agent A.
+   * Automatically approves the escrow contract to spend the token if needed.
    *
    * @param params.agentB - ERC-8004 registered address of the specialist agent.
-   * @param params.amounts - USDT amount per milestone (6 decimals, e.g. 10_000_000n = 10 USDT).
+   * @param params.amounts - Token amount per milestone in base units (check decimals on-chain).
    * @returns escrowId and transaction hash.
    */
   async createEscrow(params: CreateEscrowParams): Promise<CreateEscrowResult> {
     const totalAmount = params.amounts.reduce((sum, a) => sum + a, 0n);
 
-    await this._ensureUsdtApproval(totalAmount);
+    await this._ensureTokenApproval(totalAmount);
 
     const txHash = await this.walletClient.writeContract({
       address: this.contractAddress,
@@ -78,29 +78,37 @@ export class CeloPact {
       functionName: "createEscrow",
       args: [params.agentB, params.amounts],
       account: this.account,
-    } as Parameters<typeof this.walletClient.writeContract>[0]);
+    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
 
     const receipt = await this.publicClient.waitForTransactionReceipt({ hash: txHash });
 
-    // Extract escrowId from the EscrowCreated event log
-    const escrowCreatedLog = receipt.logs.find((log) => {
+    // Extract escrowId from the EscrowCreated event using viem's decodeEventLog.
+    // This is robust: it matches by topic0 (event signature hash) and correctly
+    // ABI-decodes all indexed and non-indexed parameters — no manual keccak256
+    // topic matching or raw hex parsing needed.
+    let escrowId: bigint | undefined;
+    for (const log of receipt.logs) {
       try {
-        return log.topics[0] === keccak256(
-          encodePacked(["string"], ["EscrowCreated(uint256,address,address,uint256,uint256)"])
-        );
-      } catch {
-        return false;
-      }
-    });
-
-    // Fallback: read escrowCount if event parsing is unavailable
-    const escrowId = escrowCreatedLog
-      ? BigInt(escrowCreatedLog.topics[1] ?? "0x1")
-      : await this.publicClient.readContract({
-          address: this.contractAddress,
+        const decoded = decodeEventLog({
           abi: CELOPACT_ESCROW_ABI,
-          functionName: "escrowCount",
-        }) as bigint;
+          eventName: "EscrowCreated",
+          topics: log.topics,
+          data: log.data,
+        });
+        // decoded.args is typed as a named object when eventName is specified
+        escrowId = (decoded.args as unknown as { escrowId: bigint }).escrowId;
+        break;
+      } catch {
+        // Not the EscrowCreated log — continue to next log
+      }
+    }
+
+    if (escrowId === undefined) {
+      throw new Error(
+        `createEscrow: transaction ${txHash} succeeded but EscrowCreated event was not found in receipt logs. ` +
+        `This likely means CONTRACT_ADDRESS is wrong or the ABI is out of sync with the deployed contract.`
+      );
+    }
 
     return { escrowId, txHash };
   }
@@ -121,7 +129,7 @@ export class CeloPact {
       functionName: "submitMilestone",
       args: [params.escrowId, params.milestoneIndex, params.outputHash],
       account: this.account,
-    } as Parameters<typeof this.walletClient.writeContract>[0]);
+    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -149,7 +157,7 @@ export class CeloPact {
       functionName: "releaseMilestone",
       args: [params.escrowId, params.milestoneIndex, sig],
       account: this.account,
-    } as Parameters<typeof this.walletClient.writeContract>[0]);
+    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -171,7 +179,32 @@ export class CeloPact {
       functionName: "disputeMilestone",
       args: [params.escrowId, params.milestoneIndex, params.proposedArbiter],
       account: this.account,
-    } as Parameters<typeof this.walletClient.writeContract>[0]);
+    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
+
+    await this.publicClient.waitForTransactionReceipt({ hash: txHash });
+    return txHash;
+  }
+
+  /**
+   * Resolves a disputed milestone. Must be called by the assigned arbiter.
+   *
+   * The arbiter must be ERC-8004 registered with a reputation score ≥ 100.
+   * The `winner` must be either agentA or agentB of the escrow; the contract
+   * transfers the milestone's locked amount to the winner.
+   *
+   * @param escrowId - The escrow containing the disputed milestone.
+   * @param milestoneIndex - The disputed milestone index.
+   * @param winner - Address of the winner (agentA or agentB).
+   * @returns Transaction hash.
+   */
+  async resolveDispute(escrowId: bigint, milestoneIndex: bigint, winner: Address): Promise<Hex> {
+    const txHash = await this.walletClient.writeContract({
+      address: this.contractAddress,
+      abi: CELOPACT_ESCROW_ABI,
+      functionName: "resolveDispute",
+      args: [escrowId, milestoneIndex, winner],
+      account: this.account,
+    } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
 
     await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return txHash;
@@ -221,10 +254,10 @@ export class CeloPact {
   // Private Helpers
   // ─────────────────────────────────────────────────────────────────────────
 
-  /** Approves the escrow contract to spend USDT if the current allowance is insufficient. */
-  private async _ensureUsdtApproval(amount: bigint): Promise<void> {
+  /** Approves the escrow contract to spend the token if the current allowance is insufficient. */
+  private async _ensureTokenApproval(amount: bigint): Promise<void> {
     const allowance = await this.publicClient.readContract({
-      address: this.usdtAddress,
+      address: this.tokenAddress,
       abi: ERC20_ABI,
       functionName: "allowance",
       args: [this.account.address, this.contractAddress],
@@ -232,12 +265,12 @@ export class CeloPact {
 
     if (allowance < amount) {
       const approveTx = await this.walletClient.writeContract({
-        address: this.usdtAddress,
+        address: this.tokenAddress,
         abi: ERC20_ABI,
         functionName: "approve",
         args: [this.contractAddress, amount],
         account: this.account,
-      } as Parameters<typeof this.walletClient.writeContract>[0]);
+      } as unknown as Parameters<typeof this.walletClient.writeContract>[0]);
       await this.publicClient.waitForTransactionReceipt({ hash: approveTx });
     }
   }

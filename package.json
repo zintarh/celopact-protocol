@@ -5,7 +5,8 @@
   "private": true,
   "workspaces": [
     "sdk",
-    "agent"
+    "agent",
+    "examples/*"
   ],
   "scripts": {
     "test:contracts": "cd contracts && forge test",

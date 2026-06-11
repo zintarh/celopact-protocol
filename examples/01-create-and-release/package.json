@@ -1,0 +1,19 @@
+{
+  "name": "celopact-example-create-and-release",
+  "version": "1.0.0",
+  "description": "Happy-path: create escrow → submit milestone → oracle release",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@celopact/sdk": "file:../../sdk",
+    "dotenv": "^16.6.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  },
+  "type": "module"
+}

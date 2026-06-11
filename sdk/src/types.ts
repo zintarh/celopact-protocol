@@ -20,7 +20,7 @@ export enum MilestoneState {
 export interface CreateEscrowParams {
   /** ERC-8004 registered address of the specialist agent being hired. */
   agentB: Address;
-  /** USDT amount (in base units, 6 decimals) for each milestone. */
+  /** Token amount (in base units — check decimals on-chain) for each milestone. */
   amounts: bigint[];
 }
 
@@ -89,11 +89,14 @@ export interface CeloPactConfig {
   /** Address of the deployed CeloPactEscrow contract. */
   contractAddress: Address;
   /**
-   * Address of the USDT token on the target chain.
-   * Celo Sepolia: 0xd077A400968890Eacc75cdc901F0356c943e4fDb
-   * Celo Mainnet: 0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
+   * Address of the ERC-20 token used for escrow payments.
+   * Celo Sepolia USDm:  0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b  (18 decimals)
+   * Celo Mainnet USDT:  0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e  (6 decimals)
+   *
+   * The SDK is token-agnostic — always read decimals on-chain via `ERC20_ABI` before
+   * computing amounts; do not assume a fixed decimal count.
    */
-  usdtAddress: Address;
+  tokenAddress: Address;
   /** Private key of the calling agent (hex string, with 0x prefix). */
   privateKey: Hex;
   /** RPC URL for the target Celo network. */

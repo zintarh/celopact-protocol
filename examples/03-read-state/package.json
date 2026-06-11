@@ -1,0 +1,18 @@
+{
+  "name": "celopact-example-read-state",
+  "version": "1.0.0",
+  "description": "Read escrow and milestone state — no private key required",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@celopact/sdk": "file:../../sdk",
+    "dotenv": "^16.0.0",
+    "tsx": "^4.0.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  },
+  "type": "module"
+}

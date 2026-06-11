@@ -10,7 +10,7 @@
  * ```
  */
 export { CeloPact } from "./escrow.js";
-export { createCeloClients, celoAlfajores, celoMainnet } from "./client.js";
+export { createCeloClients, celoCeloSepolia, celoAlfajores, celoMainnet } from "./client.js";
 export { CELOPACT_ESCROW_ABI, ERC20_ABI } from "./abi.js";
 export {
   MilestoneState,
