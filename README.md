@@ -51,17 +51,29 @@ The `ERC8004Adapter` wraps the canonical ERC-8004 registries deployed by Celo:
 
 ## Live Demo Transactions
 
-> Update these after running `DEMO_RUNS=10 npm run demo` from `agent/`
+10 full escrow lifecycles executed on Celo Sepolia — 50 on-chain transactions.
 
-| Run | Action | Tx Hash |
-|---|---|---|
-| 1 | Register Agent A on ERC-8004 | `pending` |
-| 1 | Link Agent A to CeloPact adapter | `pending` |
-| 1 | Approve USDT | `pending` |
-| 1 | Create Escrow | `pending` |
-| 1 | Submit Milestone 0 | `pending` |
-| 1 | Release Milestone 0 (oracle) | `pending` |
-| 1 | Submit Milestone 1 | `pending` |
+| Action | Tx Hash |
+|---|---|
+| Register CeloPact Requester on ERC-8004 | [`0xde28d44a`](https://celo-sepolia.blockscout.com/tx/0xde28d44ad1d45696111853d6ba874ac51f5888cf181914d6e7782796d618111b) |
+| Link Requester to CeloPact adapter | [`0xb07823ef`](https://celo-sepolia.blockscout.com/tx/0xb07823ef312d06d4ce1e61c418406d9afb8ddbc6baedea14a55cb6c9106c0d0a) |
+| Register CeloPact Fulfiller on ERC-8004 | [`0xd7ebb580`](https://celo-sepolia.blockscout.com/tx/0xd7ebb58084ffa67b456f371916527ef0bca4d0443511b703bcd6201626170c8a) |
+| Link Fulfiller to CeloPact adapter | [`0xe3c28f20`](https://celo-sepolia.blockscout.com/tx/0xe3c28f202b2fb5328ba177b2cb40bec74d585f035485a524aece9fad64170179) |
+| Run 1 — Approve USDm | [`0xf99b8b28`](https://celo-sepolia.blockscout.com/tx/0xf99b8b2843cd0a1891c1f4ee81039463bd140dd5789e86498eedfe6eee73e987) |
+| Run 1 — Create Escrow #2 | [`0x3ab10fcf`](https://celo-sepolia.blockscout.com/tx/0x3ab10fcfae83ea89b16754256df35a4587bd41a9fb4494d19b0029ec66e0a3e6) |
+| Run 1 — Submit Milestone 0 | [`0xc6cc887d`](https://celo-sepolia.blockscout.com/tx/0xc6cc887dc59f6837fd3497704358301d9fdecb7fdcc1a966533be9ea03bd4ac7) |
+| Run 1 — Release Milestone 0 (oracle sig) | [`0xf8507696`](https://celo-sepolia.blockscout.com/tx/0xf8507696a5725d233886eff701546ba4d5db303c0402538a70295dd8bac5885e) |
+| Run 1 — Submit Milestone 1 | [`0xa04bc867`](https://celo-sepolia.blockscout.com/tx/0xa04bc867314bc0366107c061f7a7ac68bb74ccec2fa9a8e35b16f2ad1eae8f8b) |
+| Run 2 — Create Escrow #3 | [`0xb7929894`](https://celo-sepolia.blockscout.com/tx/0xb7929894d023a25f67ab0d4da1eb41af73c58267a28b6dafb908c929dc382e72) |
+| Run 3 — Create Escrow #4 | [`0x1b2334e2`](https://celo-sepolia.blockscout.com/tx/0x1b2334e288f03b06d79a3b29a7283aa98624d2b8bf090ca9ecbd1e09f3021688) |
+| Run 4 — Create Escrow #5 | [`0x5f0bfeff`](https://celo-sepolia.blockscout.com/tx/0x5f0bfeff62a14a0090950607aa53459e29aa328cc66e70498434174ce83a57d1) |
+| Run 5 — Create Escrow #6 | [`0x42d508a9`](https://celo-sepolia.blockscout.com/tx/0x42d508a9466ca6a21c90750e7c76023443fca873156f51d198aae6ca8530c4c5) |
+| Run 6 — Create Escrow #7 | [`0xd8e5c102`](https://celo-sepolia.blockscout.com/tx/0xd8e5c102e8527eb85211bea3519ad980479625e57329d61a7cf99035dc255b71) |
+| Run 7 — Create Escrow #8 | [`0x24bc691a`](https://celo-sepolia.blockscout.com/tx/0x24bc691a9820ea5a1e43e3b633d8b5fef37c409349e363827b26ce207d9c022f) |
+| Run 8 — Create Escrow #9 | [`0x1e4f87fb`](https://celo-sepolia.blockscout.com/tx/0x1e4f87fb5126d8abfe4d2c702e4e56c29b240575d0d0d4f670f563b9634e193b) |
+| Run 9 — Create Escrow #10 | [`0xae750a9b`](https://celo-sepolia.blockscout.com/tx/0xae750a9bf9ec8ee37f61b69df911cad30d188fe2a148b347c997a1f3138b8597) |
+| Run 10 — Create Escrow #11 | [`0x96b19e77`](https://celo-sepolia.blockscout.com/tx/0x96b19e7706f04b14cd13cfaa8d57ad7efbd2f9f7b42e18e05465727dbfca90a2) |
+| Run 10 — Release Milestone 0 | [`0x9c77d4f0`](https://celo-sepolia.blockscout.com/tx/0x9c77d4f0f31df7e103b4b7802264f9042a6150e0e37f63413d4bf7dea8b27689) |
 
 ## ERC-8004 Agent Identity
 

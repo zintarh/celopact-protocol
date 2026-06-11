@@ -93,18 +93,18 @@ export const CELOPACT_ESCROW_ABI = [
   },
   {
     type: "function",
-    name: "escrowCount",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "count", type: "uint256" }],
-  },
-  {
-    type: "function",
     name: "CHALLENGE_WINDOW",
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
   },
+  // ── Custom errors ──
+  { type: "error", name: "EscrowNotActive",       inputs: [{ name: "escrowId",       type: "uint256" }] },
+  { type: "error", name: "NotAgentB",             inputs: [{ name: "escrowId",       type: "uint256" }] },
+  { type: "error", name: "InvalidMilestoneIndex", inputs: [{ name: "milestoneIndex", type: "uint256" }] },
+  { type: "error", name: "InvalidSignatureLength", inputs: [{ name: "length",        type: "uint256" }] },
+  { type: "error", name: "AgentNotRegistered",    inputs: [{ name: "agent",          type: "address" }] },
+  { type: "error", name: "ChallengeWindowOpen",   inputs: [{ name: "escrowId",       type: "uint256" }] },
   // ── Events ──
   {
     type: "event",

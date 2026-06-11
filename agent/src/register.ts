@@ -8,7 +8,7 @@
  *   1. Call identityRegistry.register(agentURI) → mints an ERC-721 NFT (agentId)
  *   2. Call adapter.linkAgent(agentId) → links wallet → agentId in CeloPact
  *
- * After running, visit https://8004scan.io/agent/<address> to see your agent.
+ * After running, visit https://celo-sepolia.blockscout.com/agent/<address> to see your agent.
  *
  * Usage: npm run register
  */
@@ -25,7 +25,6 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { celoCeloSepolia } from "../../sdk/src/client.js";
 
-// ── ERC-8004 deployed addresses (Celo Sepolia) ───────────────────────────────
 const ERC8004_IDENTITY_REGISTRY: Address    = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const ERC8004_REPUTATION_REGISTRY: Address  = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
 
@@ -140,7 +139,7 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
       args: [account.address],
     });
     console.log(`           Already registered ✓  agentId: ${agentId}`);
-    console.log(`           8004scan: https://8004scan.io/agent/${account.address}`);
+    console.log(`           blockscout: https://celo-sepolia.blockscout.com/address/${account.address}`);
     return;
   }
 
@@ -188,7 +187,7 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
   });
   await publicClient.waitForTransactionReceipt({ hash: linkTx });
   console.log(`           Linked ✓  tx: ${linkTx}`);
-  console.log(`           8004scan: https://8004scan.io/agent/${account.address}`);
+  console.log(`           blockscout: https://celo-sepolia.blockscout.com/address/${account.address}`);
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -206,10 +205,10 @@ async function main(): Promise<void> {
   console.log(`  Network:   Celo Sepolia (chain ID 11142220)`);
   console.log(`  Identity:  ${ERC8004_IDENTITY_REGISTRY}`);
   console.log(`  Adapter:   ${adapterAddress}`);
-  console.log(`  8004scan:  https://8004scan.io`);
+  console.log(`  8004scan:  https://celo-sepolia.blockscout.com`);
 
-  await registerAgent("Agent A (buyer)", agentAKey, adapterAddress);
-  await registerAgent("Agent B (seller)", agentBKey, adapterAddress);
+  await registerAgent("CeloPact Requester", agentAKey, adapterAddress);
+  await registerAgent("CeloPact Fulfiller", agentBKey, adapterAddress);
 
   console.log("\n✓ Both agents registered. Ready for escrow.\n");
 }

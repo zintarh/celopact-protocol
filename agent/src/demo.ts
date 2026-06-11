@@ -24,6 +24,7 @@ import {
   encodePacked,
   parseUnits,
   formatUnits,
+  decodeEventLog,
   type Hex,
   type Address,
 } from "viem";
@@ -74,7 +75,7 @@ async function runDemo(runIndex: number, decimals: number): Promise<void> {
 
   // ── STEP 1: Agent A approves token spending ─────────────────────────────
   log("Step 1", `Agent A approves token for escrow contract (decimals: ${decimals})`);
-  const approveAmount = parseUnits("100", decimals);
+  const approveAmount = parseUnits("1", decimals);
   const approveTx = await walletA.writeContract({
     address: TOKEN_ADDRESS,
     abi: ERC20_ABI,
@@ -86,9 +87,9 @@ async function runDemo(runIndex: number, decimals: number): Promise<void> {
   log("       ", `Approved ✓  tx: ${approveTx}`);
 
   // ── STEP 2: Agent A creates escrow with 2 milestones ───────────────────
-  const m0 = parseUnits("2", decimals);
-  const m1 = parseUnits("3", decimals);
-  log("Step 2", `Agent A creates escrow — 2 tokens milestone 0, 3 tokens milestone 1`);
+  const m0 = parseUnits("0.001", decimals);
+  const m1 = parseUnits("0.002", decimals);
+  log("Step 2", `Agent A creates escrow — 0.001 milestone 0, 0.002 milestone 1`);
   const amounts: bigint[] = [m0, m1];
   const createTx = await walletA.writeContract({
     address: CONTRACT_ADDRESS,
@@ -97,13 +98,16 @@ async function runDemo(runIndex: number, decimals: number): Promise<void> {
     args: [agentB.address, amounts],
     account: agentA,
   });
-  await publicClient.waitForTransactionReceipt({ hash: createTx });
-  const escrowCount = await publicClient.readContract({
-    address: CONTRACT_ADDRESS,
-    abi: CELOPACT_ESCROW_ABI,
-    functionName: "escrowCount",
-  }) as bigint;
-  const escrowId = escrowCount;
+  const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
+  // Parse escrowId from EscrowCreated event — contract uses ++_escrowCounter so first ID is 1
+  let escrowId = 1n;
+  for (const l of createReceipt.logs) {
+    try {
+      const decoded = decodeEventLog({ abi: CELOPACT_ESCROW_ABI, eventName: "EscrowCreated", ...l });
+      escrowId = decoded.args.escrowId;
+      break;
+    } catch { /* not this log */ }
+  }
   log("       ", `Escrow created ✓  id: ${escrowId}  tx: ${createTx}`);
 
   // ── STEP 3: Agent B submits Milestone 0 ────────────────────────────────

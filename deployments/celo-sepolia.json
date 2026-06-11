@@ -1,7 +1,7 @@
 {
   "network": "Celo Sepolia",
   "chainId": 11142220,
-  "deployedAt": "FILL_IN_DATE",
+  "deployedAt": "2026-06-11",
   "rpc": "https://forno.celo-sepolia.celo-testnet.org",
   "explorer": "https://celo-sepolia.blockscout.com",
   "faucet": "https://faucet.celo.org/celo-sepolia",
@@ -11,17 +11,25 @@
   },
   "contracts": {
     "ERC8004Adapter": {
-      "address": "FILL_IN_AFTER_DEPLOY",
-      "explorer": "https://celo-sepolia.blockscout.com/address/FILL_IN_AFTER_DEPLOY"
+      "address": "0x224e35502Ae14d4793FA679BF0ca82094804017a",
+      "explorer": "https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a"
     },
     "CeloPactEscrow": {
-      "address": "FILL_IN_AFTER_DEPLOY",
-      "explorer": "https://celo-sepolia.blockscout.com/address/FILL_IN_AFTER_DEPLOY",
+      "address": "0x6462fB5F67B652CB74f99C0D69e8c5086C641017",
+      "explorer": "https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017",
       "constructorArgs": {
-        "registry": "FILL_IN_AFTER_DEPLOY",
-        "usdt": "0xd077A400968890Eacc75cdc901F0356c943e4fDb",
-        "oracle": "FILL_IN_AFTER_DEPLOY"
+        "registry": "0x224e35502Ae14d4793FA679BF0ca82094804017a",
+        "token": "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b",
+        "oracle": "0xAB5EeDBFFd9040E8a0b9a8E061B5CB7bA638a45F"
       }
+    }
+  },
+  "tokens": {
+    "USDm": {
+      "address": "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b",
+      "name": "Mento Dollar",
+      "symbol": "USDm",
+      "decimals": 18
     }
   },
   "demoTxHashes": []
