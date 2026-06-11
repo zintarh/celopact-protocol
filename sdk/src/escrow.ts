@@ -23,8 +23,9 @@ import type {
  *
  * const sdk = new CeloPact({
  *   contractAddress: "0x...",
+ *   usdtAddress: "0xd077A400968890Eacc75cdc901F0356c943e4fDb", // Celo Sepolia USDT
  *   privateKey: "0x...",
- *   rpcUrl: "https://alfajores-forno.celo-testnet.org",
+ *   rpcUrl: "https://forno.celo-sepolia.celo-testnet.org",
  * });
  *
  * const { escrowId } = await sdk.createEscrow({
@@ -35,14 +36,15 @@ import type {
  */
 export class CeloPact {
   private readonly contractAddress: Address;
+  private readonly usdtAddress: Address;
   private readonly account: ReturnType<typeof privateKeyToAccount>;
   private readonly publicClient: ReturnType<typeof createCeloClients>["publicClient"];
   private readonly walletClient: ReturnType<typeof createCeloClients>["walletClient"];
-  private usdtAddress: Address | null = null;
 
   constructor(config: CeloPactConfig) {
     this.contractAddress = config.contractAddress;
-    this.account = privateKeyToAccount(config.privateKey);
+    this.usdtAddress     = config.usdtAddress;
+    this.account         = privateKeyToAccount(config.privateKey);
     const { publicClient, walletClient } = createCeloClients(config.privateKey, config.rpcUrl);
     this.publicClient = publicClient;
     this.walletClient = walletClient;
@@ -219,18 +221,8 @@ export class CeloPact {
   // Private Helpers
   // ─────────────────────────────────────────────────────────────────────────
 
-  /** Reads USDT address from the escrow contract and approves spending if needed. */
+  /** Approves the escrow contract to spend USDT if the current allowance is insufficient. */
   private async _ensureUsdtApproval(amount: bigint): Promise<void> {
-    if (!this.usdtAddress) {
-      // Read USDT address from contract (stored as immutable)
-      // For now, the deployer must pass it or we read from env
-      const usdtFromEnv = process.env["USDT_ADDRESS"] as Address | undefined;
-      if (!usdtFromEnv) {
-        throw new Error("USDT_ADDRESS environment variable is required");
-      }
-      this.usdtAddress = usdtFromEnv;
-    }
-
     const allowance = await this.publicClient.readContract({
       address: this.usdtAddress,
       abi: ERC20_ABI,

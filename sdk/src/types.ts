@@ -88,7 +88,13 @@ export interface MilestoneDetails {
 export interface CeloPactConfig {
   /** Address of the deployed CeloPactEscrow contract. */
   contractAddress: Address;
-  /** Private key of the calling agent (hex string, with or without 0x prefix). */
+  /**
+   * Address of the USDT token on the target chain.
+   * Celo Sepolia: 0xd077A400968890Eacc75cdc901F0356c943e4fDb
+   * Celo Mainnet: 0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
+   */
+  usdtAddress: Address;
+  /** Private key of the calling agent (hex string, with 0x prefix). */
   privateKey: Hex;
   /** RPC URL for the target Celo network. */
   rpcUrl: string;
