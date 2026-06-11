@@ -145,6 +145,7 @@ contract CeloPactEscrow is ReentrancyGuard {
     error ChallengeWindowOpen(uint256 endsAt);
     error ChallengeWindowClosed(uint256 endedAt);
     error InvalidOracleSignature();
+    error InvalidSignatureLength(uint256 length);
     error NotArbiter(address caller, address arbiter);
     error MilestoneNotDisputed(uint256 milestoneIndex, MilestoneState state);
     error InvalidWinner(address winner, address agentA, address agentB);
@@ -442,7 +443,7 @@ contract CeloPactEscrow is ReentrancyGuard {
         pure
         returns (address)
     {
-        require(signature.length == 65, "Invalid signature length");
+        if (signature.length != 65) revert InvalidSignatureLength(signature.length);
         bytes32 r;
         bytes32 s;
         uint8 v;
