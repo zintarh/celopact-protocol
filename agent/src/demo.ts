@@ -1,15 +1,14 @@
 /**
  * CeloPact Full Lifecycle Demo
  *
- * Demonstrates a complete escrow lifecycle on Celo Alfajores:
- *   1. Agent A creates a 2-milestone escrow and locks 5 cUSD
- *   2. Agent B submits Milestone 1 with an output hash
- *   3. Oracle signs a quality attestation → Milestone 1 releases immediately
- *   4. Agent B submits Milestone 2
- *   5. Optimistic release: wait 30 min challenge window, then release
- *      (in demo mode we warp time via Anvil — or just show both paths)
+ * Demonstrates a complete escrow lifecycle on Celo Sepolia:
+ *   1. Agent A approves USDT and creates a 2-milestone escrow (5 USDT total)
+ *   2. Agent B submits Milestone 0 with an output hash
+ *   3. Oracle signs a quality attestation → Milestone 0 releases immediately
+ *   4. Agent B submits Milestone 1 (challenge window: 30 min)
  *
  * Run with: npm run demo
+ * Run 10x:  DEMO_RUNS=10 npm run demo
  */
 
 import "dotenv/config";
@@ -24,13 +23,13 @@ import {
   type Address,
 } from "viem";
 import { privateKeyToAccount, signMessage } from "viem/accounts";
-import { celoAlfajores } from "../../sdk/src/client.js";
+import { celoCeloSepolia } from "../../sdk/src/client.js";
 import { CELOPACT_ESCROW_ABI, ERC20_ABI } from "../../sdk/src/abi.js";
 
 // ── Config from environment ──────────────────────────────────────────────────
 const CONTRACT_ADDRESS = process.env["CONTRACT_ADDRESS"] as Address;
 const USDT_ADDRESS     = process.env["USDT_ADDRESS"]     as Address;
-const RPC_URL          = process.env["RPC_URL"] ?? "https://alfajores-forno.celo-testnet.org";
+const RPC_URL          = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
 
 const agentAKey  = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
 const agentBKey  = process.env["AGENT_B_PRIVATE_KEY"] as Hex;
@@ -60,9 +59,9 @@ async function runDemo(runIndex: number): Promise<void> {
   const agentB  = privateKeyToAccount(agentBKey);
   const oracle  = privateKeyToAccount(oracleKey);
 
-  const publicClient = createPublicClient({ chain: celoAlfajores, transport: http(RPC_URL) });
-  const walletA = createWalletClient({ account: agentA, chain: celoAlfajores, transport: http(RPC_URL) });
-  const walletB = createWalletClient({ account: agentB, chain: celoAlfajores, transport: http(RPC_URL) });
+  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(RPC_URL) });
+  const walletA = createWalletClient({ account: agentA, chain: celoCeloSepolia, transport: http(RPC_URL) });
+  const walletB = createWalletClient({ account: agentB, chain: celoCeloSepolia, transport: http(RPC_URL) });
 
   log("Agents", `Agent A: ${agentA.address}`);
   log("       ", `Agent B: ${agentB.address}`);

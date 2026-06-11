@@ -1,8 +1,14 @@
 /**
- * CeloPact Agent Registration
+ * CeloPact Agent — ERC-8004 Registration
  *
- * Registers Agent A on the ERC-8004 registry deployed to Celo Alfajores.
- * After running, visit https://8004scan.io to verify your agent's on-chain identity.
+ * Registers an agent on the canonical ERC-8004 Identity Registry on Celo Sepolia,
+ * then links the wallet to the CeloPact ERC8004Adapter so it can create/join escrows.
+ *
+ * Two-step flow:
+ *   1. Call identityRegistry.register(agentURI) → mints an ERC-721 NFT (agentId)
+ *   2. Call adapter.linkAgent(agentId) → links wallet → agentId in CeloPact
+ *
+ * After running, visit https://8004scan.io/agent/<address> to see your agent.
  *
  * Usage: npm run register
  */
@@ -12,27 +18,58 @@ import {
   createPublicClient,
   createWalletClient,
   http,
+  decodeEventLog,
   type Address,
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { celoAlfajores } from "../../sdk/src/client.js";
+import { celoCeloSepolia } from "../../sdk/src/client.js";
 
-const REGISTRY_ADDRESS = process.env["REGISTRY_ADDRESS"] as Address;
-const RPC_URL          = process.env["RPC_URL"] ?? "https://alfajores-forno.celo-testnet.org";
-const agentAKey        = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
-const agentBKey        = process.env["AGENT_B_PRIVATE_KEY"] as Hex;
+// ── ERC-8004 deployed addresses (Celo Sepolia) ───────────────────────────────
+const ERC8004_IDENTITY_REGISTRY: Address    = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+const ERC8004_REPUTATION_REGISTRY: Address  = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
 
-// MockAgentRegistry ABI — matches the deployed registry interface
-const REGISTRY_ABI = [
+// ── ERC-8004 Identity Registry ABI (minimal) ─────────────────────────────────
+const IDENTITY_ABI = [
   {
     name: "register",
     type: "function",
     stateMutability: "nonpayable",
+    inputs: [{ name: "agentURI", type: "string" }],
+    outputs: [{ name: "agentId", type: "uint256" }],
+  },
+  {
+    name: "ownerOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "Transfer",
+    type: "event",
     inputs: [
-      { name: "agent",        type: "address" },
-      { name: "initialScore", type: "uint256" },
+      { name: "from",    type: "address", indexed: true },
+      { name: "to",      type: "address", indexed: true },
+      { name: "tokenId", type: "uint256", indexed: true },
     ],
+  },
+] as const;
+
+// ── ERC8004Adapter ABI (minimal) ─────────────────────────────────────────────
+const ADAPTER_ABI = [
+  {
+    name: "linkAgent",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "agentId", type: "uint256" }],
     outputs: [],
   },
   {
@@ -43,75 +80,138 @@ const REGISTRY_ABI = [
     outputs: [{ name: "registered", type: "bool" }],
   },
   {
-    name: "getReputationScore",
+    name: "agentIds",
     type: "function",
     stateMutability: "view",
-    inputs: [{ name: "agent", type: "address" }],
-    outputs: [{ name: "score", type: "uint256" }],
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
   },
 ] as const;
 
-async function registerAgent(label: string, agentKey: Hex): Promise<void> {
-  const agentAccount = privateKeyToAccount(agentKey);
-  const publicClient  = createPublicClient({ chain: celoAlfajores, transport: http(RPC_URL) });
-  const walletClient  = createWalletClient({ account: agentAccount, chain: celoAlfajores, transport: http(RPC_URL) });
+// ── Spec-compliant ERC-8004 metadata ─────────────────────────────────────────
+// Encoded as a data: URI so it's content-addressed (CID = content, not location).
+// This satisfies the 8004scan metadata compliance validator.
+function buildAgentURI(agentAddress: Address, label: string): string {
+  const metadata = {
+    type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+    name: `CeloPact Agent (${label})`,
+    description:
+      "An AI agent that uses CeloPact Protocol for milestone-based escrow on Celo. " +
+      "Locks USDT per deliverable, verifies work via signed oracle, resolves disputes " +
+      "through ERC-8004 reputation ranking.",
+    services: [
+      {
+        name: "web",
+        endpoint: "https://github.com/zintarh/celopact-protocol",
+        version: "0.1.0",
+      },
+    ],
+    supportedTrust: ["reputation"],
+    wallet: agentAddress,
+  };
+  const json = JSON.stringify(metadata);
+  const b64  = Buffer.from(json).toString("base64");
+  return `data:application/json;base64,${b64}`;
+}
 
-  console.log(`\n[Register] ${label}: ${agentAccount.address}`);
+// ── Core registration logic ───────────────────────────────────────────────────
+async function registerAgent(label: string, agentKey: Hex, adapterAddress: Address): Promise<void> {
+  const account      = privateKeyToAccount(agentKey);
+  const rpcUrl       = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
+  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(rpcUrl) });
+  const walletClient = createWalletClient({ account, chain: celoCeloSepolia, transport: http(rpcUrl) });
 
-  // Check if already registered
-  const alreadyRegistered = await publicClient.readContract({
-    address: REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
+  console.log(`\n[Register] ${label}`);
+  console.log(`           Wallet: ${account.address}`);
+
+  // Check if already linked to the adapter
+  const alreadyLinked = await publicClient.readContract({
+    address: adapterAddress,
+    abi: ADAPTER_ABI,
     functionName: "isRegistered",
-    args: [agentAccount.address],
+    args: [account.address],
   });
 
-  if (alreadyRegistered) {
-    const score = await publicClient.readContract({
-      address: REGISTRY_ADDRESS,
-      abi: REGISTRY_ABI,
-      functionName: "getReputationScore",
-      args: [agentAccount.address],
+  if (alreadyLinked) {
+    const agentId = await publicClient.readContract({
+      address: adapterAddress,
+      abi: ADAPTER_ABI,
+      functionName: "agentIds",
+      args: [account.address],
     });
-    console.log(`           Already registered ✓  reputation: ${score}`);
+    console.log(`           Already registered ✓  agentId: ${agentId}`);
+    console.log(`           8004scan: https://8004scan.io/agent/${account.address}`);
     return;
   }
 
-  // Register with initial reputation score of 500 (above the 100 minimum)
-  const tx = await walletClient.writeContract({
-    address: REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
+  // Step 1 — Register on ERC-8004 Identity Registry
+  console.log(`           Step 1: Registering on ERC-8004 Identity Registry...`);
+  const agentURI = buildAgentURI(account.address, label);
+
+  const registerTx = await walletClient.writeContract({
+    address: ERC8004_IDENTITY_REGISTRY,
+    abi: IDENTITY_ABI,
     functionName: "register",
-    args: [agentAccount.address, 500n],
-    account: agentAccount,
+    args: [agentURI],
+    account,
   });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
+  const registerReceipt = await publicClient.waitForTransactionReceipt({ hash: registerTx });
+  console.log(`           Registered on ERC-8004 ✓  tx: ${registerTx}`);
 
-  const score = await publicClient.readContract({
-    address: REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
-    functionName: "getReputationScore",
-    args: [agentAccount.address],
+  // Extract agentId from Transfer event (ERC-721 mint: from == 0x0)
+  let agentId: bigint | undefined;
+  for (const log of registerReceipt.logs) {
+    try {
+      const decoded = decodeEventLog({ abi: IDENTITY_ABI, eventName: "Transfer", ...log });
+      if (decoded.args.from === "0x0000000000000000000000000000000000000000") {
+        agentId = decoded.args.tokenId;
+        break;
+      }
+    } catch {
+      // not a Transfer log
+    }
+  }
+
+  if (agentId === undefined) {
+    throw new Error("Could not find agentId in register() transaction logs");
+  }
+  console.log(`           agentId: ${agentId}`);
+
+  // Step 2 — Link to CeloPact ERC8004Adapter
+  console.log(`           Step 2: Linking to CeloPact adapter...`);
+  const linkTx = await walletClient.writeContract({
+    address: adapterAddress,
+    abi: ADAPTER_ABI,
+    functionName: "linkAgent",
+    args: [agentId],
+    account,
   });
-
-  console.log(`           Registered ✓  reputation: ${score}  tx: ${tx}`);
-  console.log(`           View on 8004scan: https://8004scan.io/agent/${agentAccount.address}`);
+  await publicClient.waitForTransactionReceipt({ hash: linkTx });
+  console.log(`           Linked ✓  tx: ${linkTx}`);
+  console.log(`           8004scan: https://8004scan.io/agent/${account.address}`);
 }
 
+// ── Entry point ───────────────────────────────────────────────────────────────
 async function main(): Promise<void> {
-  if (!REGISTRY_ADDRESS || !agentAKey || !agentBKey) {
-    console.error("Missing REGISTRY_ADDRESS, AGENT_A_PRIVATE_KEY, or AGENT_B_PRIVATE_KEY in .env");
+  const agentAKey      = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
+  const agentBKey      = process.env["AGENT_B_PRIVATE_KEY"] as Hex;
+  const adapterAddress = process.env["REGISTRY_ADDRESS"]   as Address;
+
+  if (!agentAKey || !agentBKey || !adapterAddress) {
+    console.error("Missing AGENT_A_PRIVATE_KEY, AGENT_B_PRIVATE_KEY, or REGISTRY_ADDRESS in .env");
     process.exit(1);
   }
 
-  console.log("\n  CELOPACT PROTOCOL — ERC-8004 AGENT REGISTRATION");
-  console.log(`  Registry: ${REGISTRY_ADDRESS}`);
-  console.log(`  Network:  Celo Alfajores`);
+  console.log("\n  CELOPACT PROTOCOL — ERC-8004 REGISTRATION");
+  console.log(`  Network:   Celo Sepolia (chain ID 11142220)`);
+  console.log(`  Identity:  ${ERC8004_IDENTITY_REGISTRY}`);
+  console.log(`  Adapter:   ${adapterAddress}`);
+  console.log(`  8004scan:  https://8004scan.io`);
 
-  await registerAgent("Agent A (buyer)", agentAKey);
-  await registerAgent("Agent B (seller)", agentBKey);
+  await registerAgent("Agent A (buyer)", agentAKey, adapterAddress);
+  await registerAgent("Agent B (seller)", agentBKey, adapterAddress);
 
-  console.log("\n✓ Registration complete. Both agents are ready for escrow.\n");
+  console.log("\n✓ Both agents registered. Ready for escrow.\n");
 }
 
 main().catch((err: unknown) => {

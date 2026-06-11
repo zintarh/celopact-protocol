@@ -3,55 +3,62 @@ pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {CeloPactEscrow} from "../src/CeloPactEscrow.sol";
-import {MockAgentRegistry} from "../src/MockAgentRegistry.sol";
+import {ERC8004Adapter} from "../src/ERC8004Adapter.sol";
 
 /// @title Deploy
-/// @notice Deploys MockAgentRegistry + CeloPactEscrow to Celo Alfajores or Celo mainnet.
+/// @notice Deploys ERC8004Adapter + CeloPactEscrow to Celo Sepolia or Celo mainnet.
 /// @dev Required environment variables:
 ///      DEPLOYER_PRIVATE_KEY  — wallet that pays for deployment
 ///      ORACLE_ADDRESS        — oracle wallet address (signs quality attestations)
 ///      USDT_ADDRESS          — USDT token address on target chain
 ///
-///      Optional:
-///      REGISTRY_ADDRESS      — skip registry deployment if already live
+///      Celo Sepolia USDT:  0xd077A400968890Eacc75cdc901F0356c943e4fDb (6 decimals)
+///      Celo Mainnet USDT:  0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e (6 decimals)
 ///
-///      Alfajores USDT (cUSD proxy): 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1
+///      ERC-8004 Registries (Celo Sepolia):
+///        Identity:   0x8004A818BFB912233c491871b3d84c89A494BD9e
+///        Reputation: 0x8004B663056A597Dffe9eCcC1965A193B7388713
+///
+///      ERC-8004 Registries (Celo Mainnet):
+///        Identity:   0x8004A169FB4a3325136EB29fA0ceB6D2e539a432
+///        Reputation: 0x8004BAa17C55a88189AE136b182e5fdA19dE9b63
 ///
 ///      forge script script/Deploy.s.sol \
-///        --rpc-url alfajores \
+///        --rpc-url celosepolia \
 ///        --broadcast \
-///        --verify
+///        --verify \
+///        --verifier blockscout \
+///        --verifier-url https://celo-sepolia.blockscout.com/api
 contract Deploy is Script {
+    // ERC-8004 registry addresses by chain ID
+    address constant IDENTITY_SEPOLIA    = 0x8004A818BFB912233c491871b3d84c89A494BD9e;
+    address constant REPUTATION_SEPOLIA  = 0x8004B663056A597Dffe9eCcC1965A193B7388713;
+    address constant IDENTITY_MAINNET    = 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432;
+    address constant REPUTATION_MAINNET  = 0x8004BAa17C55a88189AE136b182e5fdA19dE9b63;
+
     function run() external {
         uint256 deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address oracle      = vm.envAddress("ORACLE_ADDRESS");
         address usdt        = vm.envAddress("USDT_ADDRESS");
 
-        // Use existing registry if provided; otherwise deploy MockAgentRegistry
-        address registry;
-        try vm.envAddress("REGISTRY_ADDRESS") returns (address r) {
-            registry = r;
-        } catch {
-            registry = address(0);
-        }
+        bool isSepolia = block.chainid == 11142220;
+
+        address identityReg   = isSepolia ? IDENTITY_SEPOLIA   : IDENTITY_MAINNET;
+        address reputationReg = isSepolia ? REPUTATION_SEPOLIA : REPUTATION_MAINNET;
 
         vm.startBroadcast(deployerKey);
 
-        if (registry == address(0)) {
-            MockAgentRegistry reg = new MockAgentRegistry();
-            registry = address(reg);
-            console.log("MockAgentRegistry deployed at:", registry);
-        } else {
-            console.log("Using existing registry:      ", registry);
-        }
+        ERC8004Adapter adapter = new ERC8004Adapter(identityReg, reputationReg);
+        console.log("ERC8004Adapter deployed at:    ", address(adapter));
+        console.log("  Identity Registry:           ", identityReg);
+        console.log("  Reputation Registry:         ", reputationReg);
 
-        CeloPactEscrow escrow = new CeloPactEscrow(registry, usdt, oracle);
-
-        console.log("CeloPactEscrow deployed at:   ", address(escrow));
-        console.log("  Registry:                   ", registry);
-        console.log("  USDT:                       ", usdt);
-        console.log("  Oracle:                     ", oracle);
-        console.log("  Network:                    ", block.chainid == 44787 ? "Alfajores" : "Celo Mainnet");
+        CeloPactEscrow escrow = new CeloPactEscrow(address(adapter), usdt, oracle);
+        console.log("CeloPactEscrow deployed at:    ", address(escrow));
+        console.log("  Adapter (registry):          ", address(adapter));
+        console.log("  USDT:                        ", usdt);
+        console.log("  Oracle:                      ", oracle);
+        console.log("  Network:                     ", isSepolia ? "Celo Sepolia" : "Celo Mainnet");
 
         vm.stopBroadcast();
     }

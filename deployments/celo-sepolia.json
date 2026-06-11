@@ -1,0 +1,28 @@
+{
+  "network": "Celo Sepolia",
+  "chainId": 11142220,
+  "deployedAt": "FILL_IN_DATE",
+  "rpc": "https://forno.celo-sepolia.celo-testnet.org",
+  "explorer": "https://celo-sepolia.blockscout.com",
+  "faucet": "https://faucet.celo.org/celo-sepolia",
+  "erc8004": {
+    "identityRegistry": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    "reputationRegistry": "0x8004B663056A597Dffe9eCcC1965A193B7388713"
+  },
+  "contracts": {
+    "ERC8004Adapter": {
+      "address": "FILL_IN_AFTER_DEPLOY",
+      "explorer": "https://celo-sepolia.blockscout.com/address/FILL_IN_AFTER_DEPLOY"
+    },
+    "CeloPactEscrow": {
+      "address": "FILL_IN_AFTER_DEPLOY",
+      "explorer": "https://celo-sepolia.blockscout.com/address/FILL_IN_AFTER_DEPLOY",
+      "constructorArgs": {
+        "registry": "FILL_IN_AFTER_DEPLOY",
+        "usdt": "0xd077A400968890Eacc75cdc901F0356c943e4fDb",
+        "oracle": "FILL_IN_AFTER_DEPLOY"
+      }
+    }
+  },
+  "demoTxHashes": []
+}

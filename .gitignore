@@ -14,5 +14,8 @@ sdk/dist/
 .env
 contracts/.env
 
+# Agent skills
+.agents/
+
 # OS
 .DS_Store

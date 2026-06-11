@@ -15,12 +15,12 @@
 import "dotenv/config";
 import { createPublicClient, http, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { celoAlfajores } from "../../sdk/src/client.js";
+import { celoCeloSepolia } from "../../sdk/src/client.js";
 import { CELOPACT_ESCROW_ABI } from "../../sdk/src/abi.js";
 
 const CONTRACT_ADDRESS  = process.env["CONTRACT_ADDRESS"] as Address;
 const REGISTRY_ADDRESS  = process.env["REGISTRY_ADDRESS"] as Address;
-const RPC_URL           = process.env["RPC_URL"] ?? "https://alfajores-forno.celo-testnet.org";
+const RPC_URL           = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
 const agentAKey         = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
 
 const REGISTRY_ABI = [
@@ -42,12 +42,12 @@ const REGISTRY_ABI = [
 
 async function main(): Promise<void> {
   const agentA      = privateKeyToAccount(agentAKey);
-  const publicClient = createPublicClient({ chain: celoAlfajores, transport: http(RPC_URL) });
+  const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http(RPC_URL) });
 
   console.log("\n  CELOPACT PROTOCOL AGENT");
   console.log("  ─────────────────────────────────────────────");
   console.log(`  Address:  ${agentA.address}`);
-  console.log(`  Network:  Celo Alfajores`);
+  console.log(`  Network:  Celo Sepolia (chain ID 11142220)`);
   console.log(`  Contract: ${CONTRACT_ADDRESS ?? "(not set)"}`);
   console.log(`  Registry: ${REGISTRY_ADDRESS ?? "(not set)"}`);
 
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
     }) as bigint;
     console.log(`\n  Protocol Stats:`);
     console.log(`    Total Escrows: ${escrowCount}`);
-    console.log(`    Celoscan:      https://alfajores.celoscan.io/address/${CONTRACT_ADDRESS}`);
+    console.log(`    Blockscout:    https://celo-sepolia.blockscout.com/address/${CONTRACT_ADDRESS}`);
   }
 
   console.log("\n  Available Commands:");

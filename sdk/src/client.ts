@@ -10,21 +10,24 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import type { Hex } from "viem";
 
-/** Celo Alfajores testnet chain definition. */
-export const celoAlfajores: Chain = defineChain({
-  id: 44787,
-  name: "Celo Alfajores",
+/** Celo Sepolia testnet — the active Celo testnet since the L2 migration (March 2025). */
+export const celoCeloSepolia: Chain = defineChain({
+  id: 11142220,
+  name: "Celo Sepolia",
   nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://alfajores-forno.celo-testnet.org"] },
+    default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] },
   },
   blockExplorers: {
-    default: { name: "Celoscan", url: "https://alfajores.celoscan.io" },
+    default: { name: "Blockscout", url: "https://celo-sepolia.blockscout.com" },
   },
   testnet: true,
 });
 
-/** Celo mainnet chain definition. */
+/** @deprecated Alfajores was replaced by Celo Sepolia after Celo's L2 migration (March 2025). */
+export const celoAlfajores = celoCeloSepolia;
+
+/** Celo mainnet chain definition. Chain ID 42220, L2 (OP Stack + EigenDA) since March 2025. */
 export const celoMainnet: Chain = defineChain({
   id: 42220,
   name: "Celo",
@@ -44,7 +47,7 @@ export function createCeloClients(
 ): { publicClient: PublicClient; walletClient: WalletClient } {
   const account = privateKeyToAccount(privateKey);
 
-  const chain = rpcUrl.includes("testnet") ? celoAlfajores : celoMainnet;
+  const chain = rpcUrl.includes("testnet") ? celoCeloSepolia : celoMainnet;
 
   const publicClient = createPublicClient({
     chain,
