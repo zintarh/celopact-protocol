@@ -1,0 +1,20 @@
+{
+  "name": "celopact-protocol",
+  "version": "0.1.0",
+  "description": "Milestone-based escrow for agent-to-agent commerce on Celo.",
+  "private": true,
+  "workspaces": [
+    "sdk",
+    "agent"
+  ],
+  "scripts": {
+    "test:contracts": "cd contracts && forge test",
+    "build:sdk": "cd sdk && npm run build",
+    "install:all": "npm install && cd sdk && npm install && cd ../agent && npm install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zintarh/celopact-protocol"
+  },
+  "license": "MIT"
+}
