@@ -1,34 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
-  <rect width="400" height="320" rx="20" fill="#faf9f7"/>
-  <rect x="0.5" y="0.5" width="399" height="319" rx="19.5" stroke="#e6e4df"/>
-
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 140" fill="none">
   <!-- Requester -->
-  <rect x="32" y="56" width="108" height="64" rx="10" fill="#fff" stroke="#d4d2cc" stroke-width="1.25"/>
-  <text x="86" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#141413">Requester</text>
-  <text x="86" y="102" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#94948f">locks funds</text>
+  <rect x="8" y="36" width="120" height="68" rx="10" stroke="#c8c6c0" stroke-width="1.25" fill="transparent"/>
+  <text x="68" y="64" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#b0aea8">Requester</text>
+  <text x="68" y="82" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#7a7a75">locks funds</text>
 
-  <!-- Fulfiller -->
-  <rect x="260" y="56" width="108" height="64" rx="10" fill="#fff" stroke="#d4d2cc" stroke-width="1.25"/>
-  <text x="314" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#141413">Fulfiller</text>
-  <text x="314" y="102" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#94948f">delivers work</text>
+  <!-- Arrow 1 -->
+  <path d="M 136 70 H 168" stroke="#c8c6c0" stroke-width="1.25" stroke-linecap="round"/>
+  <path d="M 162 66 L 170 70 L 162 74" stroke="#1a6b4a" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
   <!-- Escrow -->
-  <rect x="130" y="148" width="140" height="76" rx="12" fill="#141413"/>
-  <rect x="138" y="156" width="124" height="60" rx="8" fill="#1f1f1d"/>
-  <circle cx="200" cy="178" r="10" stroke="#3d9b72" stroke-width="1.5" fill="none"/>
-  <rect x="196" y="182" width="8" height="7" rx="1" fill="#3d9b72"/>
-  <text x="200" y="208" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#f2f1ed">Escrow</text>
+  <rect x="176" y="28" width="148" height="84" rx="12" fill="#141413"/>
+  <circle cx="250" cy="58" r="9" stroke="#3d9b72" stroke-width="1.5" fill="none"/>
+  <rect x="246" y="62" width="8" height="6" rx="1" fill="#3d9b72"/>
+  <text x="250" y="92" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#f2f1ed">Escrow</text>
 
-  <!-- ERC-8004 -->
-  <rect x="130" y="256" width="140" height="40" rx="8" fill="#fff" stroke="#e6e4df" stroke-width="1.25"/>
-  <text x="200" y="281" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="500" fill="#5c5c58">ERC-8004 reputation</text>
+  <!-- Arrow 2 -->
+  <path d="M 332 70 H 364" stroke="#c8c6c0" stroke-width="1.25" stroke-linecap="round"/>
+  <path d="M 358 66 L 366 70 L 358 74" stroke="#1a6b4a" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
-  <!-- Arrows -->
-  <path d="M 86 120 C 86 134 140 140 165 148" stroke="#c8c6c0" stroke-width="1.25" stroke-linecap="round"/>
-  <path d="M 314 120 C 314 134 260 140 235 148" stroke="#c8c6c0" stroke-width="1.25" stroke-linecap="round"/>
-  <path d="M 200 224 L 200 256" stroke="#c8c6c0" stroke-width="1.25" stroke-linecap="round" stroke-dasharray="4 4"/>
+  <!-- Fulfiller -->
+  <rect x="372" y="36" width="120" height="68" rx="10" stroke="#c8c6c0" stroke-width="1.25" fill="transparent"/>
+  <text x="432" y="64" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#b0aea8">Fulfiller</text>
+  <text x="432" y="82" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#7a7a75">delivers work</text>
 
-  <!-- Accent dots -->
-  <circle cx="165" cy="148" r="3" fill="#1a6b4a"/>
-  <circle cx="235" cy="148" r="3" fill="#1a6b4a"/>
+  <!-- Arrow 3 -->
+  <path d="M 500 70 H 532" stroke="#c8c6c0" stroke-width="1.25" stroke-linecap="round"/>
+  <path d="M 526 66 L 534 70 L 526 74" stroke="#1a6b4a" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Reputation -->
+  <rect x="540" y="44" width="172" height="52" rx="10" stroke="#c8c6c0" stroke-width="1.25" fill="transparent"/>
+  <text x="626" y="68" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#b0aea8">ERC-8004</text>
+  <text x="626" y="84" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" fill="#7a7a75">reputation</text>
+
+  <text x="250" y="18" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" fill="#7a7a75">milestone escrow on Celo</text>
 </svg>
