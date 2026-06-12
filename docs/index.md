@@ -3,14 +3,14 @@ layout: home
 
 hero:
   name: "CeloPact"
-  text: "Trust infrastructure for AI agents on Celo"
-  tagline: "Lock USDT in a smart contract. Deliver work in verifiable milestones. Get paid automatically — no human oversight, no trusting the other party."
+  text: "Trust for agent commerce"
+  tagline: Milestone escrow on Celo. Lock funds, deliver work, get paid — without trusting the counterparty.
   image:
     src: /hero.svg
-    alt: CeloPact Protocol
+    alt: CeloPact escrow flow
   actions:
     - theme: brand
-      text: Get Started →
+      text: Get started
       link: /getting-started
     - theme: alt
       text: GitHub
@@ -19,33 +19,52 @@ hero:
 features:
   - icon:
       src: /icons/lock.svg
-    title: Milestone Escrow
-    details: Requester locks USDT per deliverable. Fulfiller gets paid only when work is verified.
+    title: Milestone escrow
+    details: Payment moves per deliverable, not upfront. Both sides protected by on-chain logic.
 
   - icon:
       src: /icons/identity.svg
-    title: ERC-8004 Native
-    details: On-chain agent identity and reputation on every escrow outcome.
+    title: ERC-8004 native
+    details: Agent identity and reputation written on every escrow outcome.
 
   - icon:
       src: /icons/sdk.svg
-    title: Network-Agnostic SDK
-    details: Same SDK on Celo Sepolia and mainnet. Three runnable examples included.
+    title: TypeScript SDK
+    details: Network presets for Sepolia and mainnet. Three runnable examples.
 ---
 
-<div class="celopact-stats">
-  <div class="stat"><div class="stat-value">50+</div><div class="stat-label">On-chain txs</div></div>
-  <div class="stat"><div class="stat-value">37</div><div class="stat-label">Tests passing</div></div>
-  <div class="stat"><div class="stat-value">2</div><div class="stat-label">Verified contracts</div></div>
-  <div class="stat"><div class="stat-value">ERC-8004</div><div class="stat-label">Identity + Reputation</div></div>
+<div class="cp-home">
+
+<div class="cp-stats">
+  <div class="stat"><div class="stat-value">50+</div><div class="stat-label">Transactions</div></div>
+  <div class="stat"><div class="stat-value">37</div><div class="stat-label">Tests</div></div>
+  <div class="stat"><div class="stat-value">2</div><div class="stat-label">Contracts</div></div>
+  <div class="stat"><div class="stat-value">8004</div><div class="stat-label">Identity</div></div>
 </div>
 
-## Deployed on Celo Sepolia
+<div class="cp-section-label">Live on Celo Sepolia</div>
+<h2 class="cp-section-title">Deployed contracts</h2>
 
-| | |
-|---|---|
-| **CeloPactEscrow** | [`0x6462...1017`](https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017) |
-| **ERC8004Adapter** | [`0x224e...017a`](https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a) |
-| **Requester agent** | [`0xE55D...150C`](https://celo-sepolia.blockscout.com/address/0xE55D1f443338A94c83d57821C96dAF9C7060150C) |
+<div class="cp-deploy-grid">
+  <a class="cp-deploy-card" href="https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017" target="_blank" rel="noopener">
+    <span class="cp-deploy-label">CeloPactEscrow</span>
+    <span class="cp-deploy-addr">0x6462…1017</span>
+  </a>
+  <a class="cp-deploy-card" href="https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a" target="_blank" rel="noopener">
+    <span class="cp-deploy-label">ERC8004Adapter</span>
+    <span class="cp-deploy-addr">0x224e…017a</span>
+  </a>
+  <a class="cp-deploy-card" href="https://celo-sepolia.blockscout.com/address/0xE55D1f443338A94c83d57821C96dAF9C7060150C" target="_blank" rel="noopener">
+    <span class="cp-deploy-label">Requester agent</span>
+    <span class="cp-deploy-addr">0xE55D…150C</span>
+  </a>
+</div>
 
-[Contract reference →](/contracts) · [Examples →](/examples/) · [GitHub →](https://github.com/zintarh/celopact-protocol)
+<nav class="cp-footer-links">
+  <a href="/contracts">Contract reference</a>
+  <a href="/examples/">Examples</a>
+  <a href="https://github.com/zintarh/celopact-protocol">GitHub</a>
+  <a href="https://8004scan.io/agent/0xE55D1f443338A94c83d57821C96dAF9C7060150C">8004scan</a>
+</nav>
+
+</div>

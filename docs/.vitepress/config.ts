@@ -9,7 +9,7 @@ export default defineConfig({
 
   head: [
     ["link", { rel: "icon", href: "/celopact-protocol/favicon.svg" }],
-    ["meta", { name: "theme-color", content: "#35D07F" }],
+    ["meta", { name: "theme-color", content: "#141413" }],
     ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:title", content: "CeloPact Protocol" }],
     [
@@ -74,9 +74,8 @@ export default defineConfig({
     ],
 
     footer: {
-      message: "Released under the MIT License.",
-      copyright:
-        "Built for the Celo Onchain Agents Hackathon 2026 · Deployed on Celo Sepolia",
+      message: "MIT License",
+      copyright: "Celo Onchain Agents Hackathon 2026",
     },
 
     search: { provider: "local" },
