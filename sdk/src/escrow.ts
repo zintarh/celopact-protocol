@@ -19,7 +19,7 @@ import type {
  *
  * @example
  * ```typescript
- * import { CeloPact } from "@celopact/sdk";
+ * import { CeloPact } from "celopact-sdk";
  *
  * const sdk = new CeloPact({
  *   contractAddress: "0x...",

@@ -1,15 +1,15 @@
 /**
  * CeloPact Full Lifecycle Demo
  *
- * Demonstrates a complete escrow lifecycle on Celo Sepolia:
- *   1. Agent A approves the stablecoin and creates a 2-milestone escrow
+ * Demonstrates a complete escrow lifecycle using the CeloPact SDK:
+ *   1. Agent A creates a 2-milestone escrow (SDK handles token approval)
  *   2. Agent B submits Milestone 0 with an output hash
  *   3. Oracle signs a quality attestation → Milestone 0 releases immediately
- *   4. Agent B submits Milestone 1 (challenge window: 30 min)
+ *   4. Agent B submits Milestone 1
+ *   5. Oracle signs → Milestone 1 releases (full escrow complete)
  *
  * Works with any ERC-20: reads token decimals on-chain so you can use
- * USDm (18 decimals, from Celo faucet) or USDT (6 decimals) without
- * changing any code — just set TOKEN_ADDRESS in .env.
+ * USDm (18 decimals) or USDT (6 decimals) — just set TOKEN_ADDRESS in .env.
  *
  * Run with: npm run demo
  * Run 10x:  DEMO_RUNS=10 npm run demo
@@ -18,31 +18,32 @@
 import "dotenv/config";
 import {
   createPublicClient,
-  createWalletClient,
   http,
   keccak256,
   encodePacked,
   parseUnits,
   formatUnits,
-  decodeEventLog,
   type Hex,
   type Address,
 } from "viem";
-import { privateKeyToAccount, signMessage } from "viem/accounts";
-import { resolveChain } from "../../sdk/src/networks.js";
-import type { CeloNetworkName } from "../../sdk/src/networks.js";
-import { CELOPACT_ESCROW_ABI, ERC20_ABI } from "../../sdk/src/abi.js";
+import {
+  CeloPact,
+  ERC20_ABI,
+  resolveChain,
+  type CeloNetworkName,
+  type CeloPactConfig,
+} from "celopact-sdk";
+import { DemoOracle } from "./oracle.js";
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const CONTRACT_ADDRESS = process.env["CONTRACT_ADDRESS"] as Address;
-const TOKEN_ADDRESS    = process.env["TOKEN_ADDRESS"] ?? process.env["USDT_ADDRESS"] as Address;
-const NETWORK          = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
-const RPC_URL          = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
-const CHAIN            = resolveChain({ network: NETWORK, rpcUrl: RPC_URL });
+const TOKEN_ADDRESS    = (process.env["TOKEN_ADDRESS"] ?? process.env["USDT_ADDRESS"]) as Address;
+const NETWORK          = (process.env["NETWORK"] ?? "celo-mainnet") as CeloNetworkName;
+const RPC_URL          = process.env["RPC_URL"] ?? "https://forno.celo.org";
 
-const agentAKey  = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
-const agentBKey  = process.env["AGENT_B_PRIVATE_KEY"] as Hex;
-const oracleKey  = process.env["ORACLE_PRIVATE_KEY"]  as Hex;
+const agentAKey = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
+const agentBKey = process.env["AGENT_B_PRIVATE_KEY"] as Hex;
+const oracleKey = process.env["ORACLE_PRIVATE_KEY"]  as Hex;
 
 const DEMO_RUNS = parseInt(process.env["DEMO_RUNS"] ?? "1", 10);
 
@@ -64,110 +65,98 @@ async function runDemo(runIndex: number, decimals: number): Promise<void> {
   console.log(`\n  CELOPACT DEMO RUN #${runIndex}`);
   separator();
 
-  const agentA  = privateKeyToAccount(agentAKey);
-  const agentB  = privateKeyToAccount(agentBKey);
-  const oracle  = privateKeyToAccount(oracleKey);
+  const oracle = new DemoOracle(oracleKey);
 
-  const publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) });
-  const walletA = createWalletClient({ account: agentA, chain: CHAIN, transport: http(RPC_URL) });
-  const walletB = createWalletClient({ account: agentB, chain: CHAIN, transport: http(RPC_URL) });
+  const baseConfig: Omit<CeloPactConfig, "privateKey"> = {
+    contractAddress: CONTRACT_ADDRESS,
+    tokenAddress: TOKEN_ADDRESS,
+    rpcUrl: RPC_URL,
+    network: NETWORK,
+  };
 
-  log("Agents", `Agent A: ${agentA.address}`);
-  log("       ", `Agent B: ${agentB.address}`);
+  const sdkA = new CeloPact({ ...baseConfig, privateKey: agentAKey });
+  const sdkB = new CeloPact({ ...baseConfig, privateKey: agentBKey });
+
+  log("Agents", `Agent A: ${sdkA.agentAddress}`);
+  log("       ", `Agent B: ${sdkB.agentAddress}`);
   log("Oracle ", `Oracle:  ${oracle.address}`);
 
-  // ── STEP 1: Agent A approves token spending ─────────────────────────────
-  log("Step 1", `Agent A approves token for escrow contract (decimals: ${decimals})`);
-  const approveAmount = parseUnits("1", decimals);
-  const approveTx = await walletA.writeContract({
-    address: TOKEN_ADDRESS,
-    abi: ERC20_ABI,
-    functionName: "approve",
-    args: [CONTRACT_ADDRESS, approveAmount],
-    account: agentA,
-  });
-  await publicClient.waitForTransactionReceipt({ hash: approveTx });
-  log("       ", `Approved ✓  tx: ${approveTx}`);
-
-  // ── STEP 2: Agent A creates escrow with 2 milestones ───────────────────
+  // ── STEP 1: Agent A creates escrow ─────────────────────────────────────────
+  // SDK automatically approves the escrow contract to spend tokens before
+  // calling createEscrow — no separate approve transaction needed.
   const m0 = parseUnits("0.001", decimals);
   const m1 = parseUnits("0.002", decimals);
-  log("Step 2", `Agent A creates escrow — 0.001 milestone 0, 0.002 milestone 1`);
-  const amounts: bigint[] = [m0, m1];
-  const createTx = await walletA.writeContract({
-    address: CONTRACT_ADDRESS,
-    abi: CELOPACT_ESCROW_ABI,
-    functionName: "createEscrow",
-    args: [agentB.address, amounts],
-    account: agentA,
+  log("Step 1", `Agent A creates 2-milestone escrow (${formatUnits(m0 + m1, decimals)} tokens total)`);
+
+  const { escrowId, txHash: createTx } = await sdkA.createEscrow({
+    agentB: sdkB.agentAddress,
+    amounts: [m0, m1],
   });
-  const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
-  // Parse escrowId from EscrowCreated event — contract uses ++_escrowCounter so first ID is 1
-  let escrowId = 1n;
-  for (const l of createReceipt.logs) {
-    try {
-      const decoded = decodeEventLog({ abi: CELOPACT_ESCROW_ABI, eventName: "EscrowCreated", ...l });
-      escrowId = decoded.args.escrowId;
-      break;
-    } catch { /* not this log */ }
-  }
   log("       ", `Escrow created ✓  id: ${escrowId}  tx: ${createTx}`);
 
-  // ── STEP 3: Agent B submits Milestone 0 ────────────────────────────────
-  const outputHash0: Hex = keccak256(encodePacked(["string"], [`run${runIndex}_milestone0_output`]));
-  log("Step 3", `Agent B submits Milestone 0  hash: ${outputHash0.slice(0, 18)}...`);
-  const submitTx0 = await walletB.writeContract({
-    address: CONTRACT_ADDRESS,
-    abi: CELOPACT_ESCROW_ABI,
-    functionName: "submitMilestone",
-    args: [escrowId, 0n, outputHash0],
-    account: agentB,
+  // ── STEP 2: Agent B submits Milestone 0 ────────────────────────────────────
+  const outputHash0: Hex = keccak256(
+    encodePacked(["string"], [`run${runIndex}_milestone0_output`])
+  );
+  log("Step 2", `Agent B submits Milestone 0  hash: ${outputHash0.slice(0, 18)}...`);
+
+  const submitTx0 = await sdkB.submitMilestone({
+    escrowId,
+    milestoneIndex: 0n,
+    outputHash: outputHash0,
   });
-  await publicClient.waitForTransactionReceipt({ hash: submitTx0 });
   log("       ", `Submitted ✓  tx: ${submitTx0}`);
 
-  // ── STEP 4: Oracle signs attestation → immediate release ───────────────
-  log("Step 4", "Oracle signs quality attestation for Milestone 0");
-  const messageHash = keccak256(
-    encodePacked(["uint256", "uint256", "bytes32"], [escrowId, 0n, outputHash0])
+  // ── STEP 3: Oracle signs attestation → immediate release ───────────────────
+  log("Step 3", "Oracle signs quality attestation for Milestone 0");
+  const oracleSig = await oracle.signAttestation(escrowId, 0n, outputHash0);
+
+  const releaseTx0 = await sdkA.releaseMilestone({
+    escrowId,
+    milestoneIndex: 0n,
+    oracleSignature: oracleSig,
+  });
+  log(
+    "       ",
+    `Milestone 0 RELEASED ✓  ${formatUnits(m0, decimals)} tokens → Agent B  tx: ${releaseTx0}`
   );
-  const oracleSig = await signMessage({
-    privateKey: oracleKey,
-    message: { raw: Buffer.from(messageHash.slice(2), "hex") },
-  });
 
-  const releaseTx0 = await walletA.writeContract({
-    address: CONTRACT_ADDRESS,
-    abi: CELOPACT_ESCROW_ABI,
-    functionName: "releaseMilestone",
-    args: [escrowId, 0n, oracleSig],
-    account: agentA,
-  });
-  await publicClient.waitForTransactionReceipt({ hash: releaseTx0 });
-  log("       ", `Milestone 0 RELEASED ✓  ${formatUnits(m0, decimals)} tokens → Agent B  tx: ${releaseTx0}`);
+  // ── STEP 4: Agent B submits Milestone 1 ────────────────────────────────────
+  const outputHash1: Hex = keccak256(
+    encodePacked(["string"], [`run${runIndex}_milestone1_output`])
+  );
+  log("Step 4", `Agent B submits Milestone 1  hash: ${outputHash1.slice(0, 18)}...`);
 
-  // ── STEP 5: Agent B submits Milestone 1 ────────────────────────────────
-  const outputHash1: Hex = keccak256(encodePacked(["string"], [`run${runIndex}_milestone1_output`]));
-  log("Step 5", `Agent B submits Milestone 1  hash: ${outputHash1.slice(0, 18)}...`);
-  const submitTx1 = await walletB.writeContract({
-    address: CONTRACT_ADDRESS,
-    abi: CELOPACT_ESCROW_ABI,
-    functionName: "submitMilestone",
-    args: [escrowId, 1n, outputHash1],
-    account: agentB,
+  const submitTx1 = await sdkB.submitMilestone({
+    escrowId,
+    milestoneIndex: 1n,
+    outputHash: outputHash1,
   });
-  await publicClient.waitForTransactionReceipt({ hash: submitTx1 });
-  log("       ", `Submitted ✓  tx: ${submitTx1}  (30-min challenge window open)`);
+  log("       ", `Submitted ✓  tx: ${submitTx1}`);
+
+  // ── STEP 5: Oracle signs attestation → release Milestone 1 ─────────────────
+  log("Step 5", "Oracle signs quality attestation for Milestone 1");
+  const oracleSig1 = await oracle.signAttestation(escrowId, 1n, outputHash1);
+
+  const releaseTx1 = await sdkA.releaseMilestone({
+    escrowId,
+    milestoneIndex: 1n,
+    oracleSignature: oracleSig1,
+  });
+  log(
+    "       ",
+    `Milestone 1 RELEASED ✓  ${formatUnits(m1, decimals)} tokens → Agent B  tx: ${releaseTx1}`
+  );
 
   separator();
   console.log(`\n  RUN #${runIndex} COMPLETE — 5 on-chain transactions`);
   console.log(`  Escrow ID: ${escrowId}`);
   console.log(`  Tx hashes (paste into README.md):`);
-  console.log(`    approve:   ${approveTx}`);
   console.log(`    create:    ${createTx}`);
   console.log(`    submit0:   ${submitTx0}`);
   console.log(`    release0:  ${releaseTx0}`);
   console.log(`    submit1:   ${submitTx1}`);
+  console.log(`    release1:  ${releaseTx1}`);
   separator();
 }
 
@@ -181,8 +170,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Read decimals on-chain so USDm (18) and USDT (6) both work without code changes
-  const publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) });
+  const chain = resolveChain({ network: NETWORK, rpcUrl: RPC_URL });
+  const publicClient = createPublicClient({ chain, transport: http(RPC_URL) });
+
   const decimals = await publicClient.readContract({
     address: TOKEN_ADDRESS,
     abi: ERC20_ABI,
@@ -190,7 +180,7 @@ async function main(): Promise<void> {
   }) as number;
 
   console.log("\n  CELOPACT PROTOCOL — AGENT DEMO");
-  console.log(`  Runs:     ${DEMO_RUNS}  |  Network: Celo Sepolia`);
+  console.log(`  Runs:     ${DEMO_RUNS}  |  Network: ${NETWORK} (chain ${chain.id})`);
   console.log(`  Contract: ${CONTRACT_ADDRESS}`);
   console.log(`  Token:    ${TOKEN_ADDRESS} (${decimals} decimals)`);
 

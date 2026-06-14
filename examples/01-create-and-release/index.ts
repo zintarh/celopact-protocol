@@ -29,11 +29,11 @@ import {
 import { signMessage } from "viem/accounts";
 import {
   CeloPact,
-  celoCeloSepolia,
   ERC20_ABI,
   MilestoneState,
+  resolveChain,
   type CeloPactConfig,
-} from "@celopact/sdk";
+} from "celopact-sdk";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Load and validate environment variables
@@ -93,7 +93,7 @@ console.log(`  Token:    ${TOKEN_ADDRESS}`);
 // ─────────────────────────────────────────────────────────────────────────────
 
 const publicClient = createPublicClient({
-  chain: celoCeloSepolia,
+  chain: resolveChain({ rpcUrl: RPC_URL }),
   transport: http(RPC_URL),
 });
 
@@ -169,10 +169,10 @@ console.log(`          Tx: ${submitTxHash}`);
 // signature. The message it expects is:
 //   keccak256(abi.encodePacked(escrowId, milestoneIndex, outputHash))
 //
-// We sign this raw hash (no EIP-191 prefix) using viem's signMessage with
-// `message: { raw: ... }`. Using the string form of signMessage would add
-// the "\x19Ethereum Signed Message:\n32" prefix, which would make
-// ecrecover return a different address — and the contract would reject it.
+// viem's signMessage with { raw: ... } applies the standard EIP-191 prefix
+// ("\x19Ethereum Signed Message:\n32") before signing the raw bytes.
+// The contract also applies the same prefix before ecrecover, so both
+// sides compute the same ethSignedHash and the signature validates.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const messageHash = keccak256(

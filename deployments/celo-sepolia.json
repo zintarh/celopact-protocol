@@ -1,6 +1,8 @@
 {
   "network": "Celo Sepolia",
   "chainId": 11142220,
+  "status": "legacy",
+  "note": "Pre-hardening deployment (June 2025). Missing refundStaleMilestone, defaultDisputeToAgentA, and other v1 security features. Use celo-mainnet.json for production.",
   "deployedAt": "2026-06-11",
   "rpc": "https://forno.celo-sepolia.celo-testnet.org",
   "explorer": "https://celo-sepolia.blockscout.com",

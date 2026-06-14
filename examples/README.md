@@ -17,9 +17,9 @@ Runnable examples that demonstrate the full lifecycle of milestone-based escrow 
 ## Prerequisites
 
 - **Node.js 18+** — examples use top-level `await` (ES2022 feature, supported in Node 18+).
-- **Two funded Celo Sepolia wallets** — Agent A needs token balance to lock in escrow; Agent B and the oracle/arbiter only need a small amount of CELO for gas.
-- **USDm on Celo Sepolia** — get test tokens from the [Celo faucet](https://faucet.celo.org/alfajores). USDm address: `0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b` (18 decimals).
-- **Deployed CeloPactEscrow contract** — use `0x6462fB5F67B652CB74f99C0D69e8c5086C641017` on Celo Sepolia (from `deployments/`).
+- **Two funded Celo mainnet wallets** — Requester needs USDT; others need CELO for gas.
+- **USDT on Celo mainnet** — `0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e` (6 decimals).
+- **Deployed CeloPactEscrow** — `0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59` on mainnet (see `deployments/celo-mainnet.json`).
 
 ---
 
@@ -37,7 +37,7 @@ The common variables are:
 |----------|-------------|
 | `CONTRACT_ADDRESS` | Deployed `CeloPactEscrow` address |
 | `TOKEN_ADDRESS` | ERC-20 token address (USDm on testnet, USDT on mainnet) |
-| `RPC_URL` | Celo Sepolia: `https://forno.celo-sepolia.celo-testnet.org` |
+| `RPC_URL` | Celo mainnet: `https://forno.celo.org` |
 | `AGENT_A_PRIVATE_KEY` | Private key (hex, with `0x`) of the agent creating and funding the escrow |
 | `AGENT_B_PRIVATE_KEY` | Private key of the agent completing milestones |
 | `ORACLE_PRIVATE_KEY` | Private key of the oracle that signs quality attestations |
@@ -47,7 +47,7 @@ The common variables are:
 
 ## How to install and run each example
 
-Each example installs `@celopact/sdk` from the local monorepo via a `file:` path, so no publishing is needed.
+Each example installs `celopact-sdk` from the local monorepo via a `file:` path, so no publishing is needed.
 
 ```bash
 # Example 01: Happy path
@@ -82,7 +82,7 @@ If you are building inside this monorepo, reference the SDK by file path in your
 ```json
 {
   "dependencies": {
-    "@celopact/sdk": "file:../../sdk"
+    "celopact-sdk": "file:../../sdk"
   }
 }
 ```
@@ -97,10 +97,10 @@ npm install github:zintarh/celopact-protocol
 
 npm will clone the repo and run the `prepare` script (`npm run build`) automatically, producing the compiled `dist/` before linking it.
 
-### From npm (once published)
+### From npm
 
 ```bash
-npm install @celopact/sdk
+npm install celopact-sdk viem
 ```
 
 ---
@@ -111,7 +111,7 @@ npm install @celopact/sdk
 import "dotenv/config";
 import { createPublicClient, http, parseUnits, formatUnits, keccak256, encodePacked } from "viem";
 import { signMessage } from "viem/accounts";
-import { CeloPact, celoCeloSepolia, ERC20_ABI } from "@celopact/sdk";
+import { CeloPact, celoCeloSepolia, ERC20_ABI } from "celopact-sdk";
 import type { Address, Hex } from "viem";
 
 const sdk = new CeloPact({

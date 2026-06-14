@@ -1,5 +1,6 @@
-/** ABI for CeloPactEscrow — generated from compiled contract. */
+/** ABI for CeloPactEscrow — exact match to contracts/src/CeloPactEscrow.sol. */
 export const CELOPACT_ESCROW_ABI = [
+  // ── Constructor ──────────────────────────────────────────────────────────────
   {
     type: "constructor",
     inputs: [
@@ -8,13 +9,15 @@ export const CELOPACT_ESCROW_ABI = [
       { name: "_oracle",   type: "address" },
     ],
   },
+
+  // ── Write functions ──────────────────────────────────────────────────────────
   {
     type: "function",
     name: "createEscrow",
     stateMutability: "nonpayable",
     inputs: [
-      { name: "agentB",   type: "address" },
-      { name: "amounts",  type: "uint256[]" },
+      { name: "agentB",  type: "address" },
+      { name: "amounts", type: "uint256[]" },
     ],
     outputs: [{ name: "escrowId", type: "uint256" }],
   },
@@ -64,6 +67,28 @@ export const CELOPACT_ESCROW_ABI = [
   },
   {
     type: "function",
+    name: "refundStaleMilestone",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "defaultDisputeToAgentA",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+    outputs: [],
+  },
+
+  // ── View functions ───────────────────────────────────────────────────────────
+  {
+    type: "function",
     name: "getEscrow",
     stateMutability: "view",
     inputs: [{ name: "escrowId", type: "uint256" }],
@@ -93,19 +118,161 @@ export const CELOPACT_ESCROW_ABI = [
   },
   {
     type: "function",
+    name: "getSubmissionDeadline",
+    stateMutability: "view",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "getDisputeDeadline",
+    stateMutability: "view",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "escrowCount",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "count", type: "uint256" }],
+  },
+
+  // ── Constants (public immutable / constant) ──────────────────────────────────
+  {
+    type: "function",
     name: "CHALLENGE_WINDOW",
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
   },
-  // ── Custom errors ──
-  { type: "error", name: "EscrowNotActive",       inputs: [{ name: "escrowId",       type: "uint256" }] },
-  { type: "error", name: "NotAgentB",             inputs: [{ name: "escrowId",       type: "uint256" }] },
-  { type: "error", name: "InvalidMilestoneIndex", inputs: [{ name: "milestoneIndex", type: "uint256" }] },
-  { type: "error", name: "InvalidSignatureLength", inputs: [{ name: "length",        type: "uint256" }] },
-  { type: "error", name: "AgentNotRegistered",    inputs: [{ name: "agent",          type: "address" }] },
-  { type: "error", name: "ChallengeWindowOpen",   inputs: [{ name: "escrowId",       type: "uint256" }] },
-  // ── Events ──
+  {
+    type: "function",
+    name: "MIN_REPUTATION",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "MIN_ARBITER_REPUTATION",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "MILESTONE_SUBMISSION_DEADLINE",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "DISPUTE_RESOLUTION_DEADLINE",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+
+  // ── Custom errors (exact match to CeloPactEscrow.sol) ───────────────────────
+  { type: "error", name: "ZeroAddress",                  inputs: [] },
+  { type: "error", name: "SameAgent",                    inputs: [] },
+  { type: "error", name: "NoMilestones",                 inputs: [] },
+  { type: "error", name: "InvalidOracleSignature",       inputs: [] },
+  { type: "error", name: "NotRegistered",                inputs: [{ name: "agent",          type: "address" }] },
+  { type: "error", name: "ZeroMilestoneAmount",          inputs: [{ name: "milestoneIndex", type: "uint256" }] },
+  { type: "error", name: "EscrowNotActive",              inputs: [{ name: "escrowId",       type: "uint256" }] },
+  { type: "error", name: "InvalidEscrowId",              inputs: [{ name: "escrowId",       type: "uint256" }] },
+  { type: "error", name: "PreviousMilestoneIncomplete",  inputs: [{ name: "milestoneIndex", type: "uint256" }] },
+  { type: "error", name: "SubmissionDeadlineNotReached", inputs: [{ name: "deadline",       type: "uint256" }] },
+  { type: "error", name: "DisputeDeadlineNotReached",    inputs: [{ name: "deadline",       type: "uint256" }] },
+  { type: "error", name: "InvalidSignatureLength",       inputs: [{ name: "length",         type: "uint256" }] },
+  { type: "error", name: "ChallengeWindowOpen",          inputs: [{ name: "endsAt",         type: "uint256" }] },
+  { type: "error", name: "ChallengeWindowClosed",        inputs: [{ name: "endedAt",        type: "uint256" }] },
+  {
+    type: "error",
+    name: "ReputationTooLow",
+    inputs: [
+      { name: "agent",    type: "address" },
+      { name: "required", type: "uint256" },
+      { name: "actual",   type: "uint256" },
+    ],
+  },
+  {
+    type: "error",
+    name: "NotAgentB",
+    inputs: [
+      { name: "caller", type: "address" },
+      { name: "agentB", type: "address" },
+    ],
+  },
+  {
+    type: "error",
+    name: "NotAgentA",
+    inputs: [
+      { name: "caller", type: "address" },
+      { name: "agentA", type: "address" },
+    ],
+  },
+  {
+    type: "error",
+    name: "NotArbiter",
+    inputs: [
+      { name: "caller",  type: "address" },
+      { name: "arbiter", type: "address" },
+    ],
+  },
+  {
+    type: "error",
+    name: "MilestoneNotPending",
+    inputs: [
+      { name: "milestoneIndex", type: "uint256" },
+      { name: "state",          type: "uint8" },
+    ],
+  },
+  {
+    type: "error",
+    name: "MilestoneNotSubmitted",
+    inputs: [
+      { name: "milestoneIndex", type: "uint256" },
+      { name: "state",          type: "uint8" },
+    ],
+  },
+  {
+    type: "error",
+    name: "MilestoneNotDisputed",
+    inputs: [
+      { name: "milestoneIndex", type: "uint256" },
+      { name: "state",          type: "uint8" },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidWinner",
+    inputs: [
+      { name: "winner", type: "address" },
+      { name: "agentA", type: "address" },
+      { name: "agentB", type: "address" },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidArbiter",
+    inputs: [
+      { name: "arbiter", type: "address" },
+      { name: "agentA",  type: "address" },
+      { name: "agentB",  type: "address" },
+    ],
+  },
+
+  // ── Events ───────────────────────────────────────────────────────────────────
   {
     type: "event",
     name: "EscrowCreated",
@@ -157,9 +324,29 @@ export const CELOPACT_ESCROW_ABI = [
       { name: "amount",         type: "uint256", indexed: false },
     ],
   },
+  {
+    type: "event",
+    name: "MilestoneCancelled",
+    inputs: [
+      { name: "escrowId",       type: "uint256", indexed: true },
+      { name: "milestoneIndex", type: "uint256", indexed: true },
+      { name: "recipient",      type: "address", indexed: true },
+      { name: "amount",         type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "DisputeDefaulted",
+    inputs: [
+      { name: "escrowId",       type: "uint256", indexed: true },
+      { name: "milestoneIndex", type: "uint256", indexed: true },
+      { name: "recipient",      type: "address", indexed: true },
+      { name: "amount",         type: "uint256", indexed: false },
+    ],
+  },
 ] as const;
 
-/** Minimal ERC-20 ABI for USDT approval. */
+/** Minimal ERC-20 ABI — approval, allowance, balance, decimals. */
 export const ERC20_ABI = [
   {
     type: "function",

@@ -11,7 +11,7 @@ import {IAgentRegistry} from "./IAgentRegistry.sol";
 /// @notice Milestone-based escrow for agent-to-agent commerce on Celo.
 ///         Agent A locks USDT, Agent B completes milestones, payment releases
 ///         automatically after a challenge window or via a signed oracle attestation.
-///         Disputes are resolved by the highest-reputation ERC-8004 agent.
+///         Disputes are resolved by a Requester-proposed ERC-8004 arbiter.
 /// @dev Integrates with ERC-8004 (IAgentRegistry) for identity verification and
 ///      reputation tracking. Oracle address is a demo signer; in production replace
 ///      with a Phala TEE attestation verifier — the interface is identical.

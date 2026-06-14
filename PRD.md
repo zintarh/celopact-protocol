@@ -1,6 +1,8 @@
 # CeloPact Protocol — Product Requirements Document
 ### The Trust Infrastructure for Agent-to-Agent Commerce on Celo
 
+> **Status (June 2026):** Shipped on **Celo Mainnet** · `celopact-sdk` on npm · 40+ demo txs · See [`README.md`](README.md) for judge checklist.
+
 **Version:** 2.0 (Compressed — One Day Build)
 **Date:** June 11, 2026
 **Deadline:** June 15, 2026 — Celo On-Chain Agents Hackathon
@@ -30,7 +32,7 @@ That proves the market. We are building the open-source version.
 A milestone-based escrow smart contract system for AI agents on Celo.
 
 Agent A locks USDT. Agent B completes milestones. An optimistic release window
-enforces delivery. Disputes go to the highest-reputation ERC-8004 agent.
+enforces delivery. Disputes go to a Requester-proposed ERC-8004 arbiter (min reputation 100).
 Every outcome writes back to the ERC-8004 Reputation Registry.
 
 **Name:** CeloPact Protocol
@@ -38,7 +40,7 @@ Every outcome writes back to the ERC-8004 Reputation Registry.
 - "Celo" = instant ecosystem signal to both human and AI judges
 - "Pact" = binding agreement with consequences for breaking it
 - Works cross-culturally (English, French, Spanish, Portuguese)
-- npm: @celopact/sdk — clean, installable, professional
+- npm: celopact-sdk — clean, installable, professional
 
 ---
 
@@ -100,7 +102,7 @@ Before submission, run through every row. Every row must be satisfiable.
 | 12 | Integration with Celo-native features      | USDT payment token, ERC-8004 identity checks on create  |
 | 13 | Innovation — solves an unsolved problem    | First open-source agent escrow SDK on Celo              |
 | 14 | GitHub repo has meaningful commit history  | Commit each block as it is completed, descriptive msgs  |
-| 15 | SDK is installable by other developers     | @celopact/sdk with package.json exports field           |
+| 15 | SDK installable by other developers     | celopact-sdk on npm with package.json exports field           |
 | 16 | Demo evidence — tx hashes in README        | Paste real Alfajores tx hashes into README after demo   |
 | 17 | Functional agent that completes tasks      | demo.ts runs end-to-end without errors                  |
 | 18 | Ecosystem contribution                     | README section: How CeloPact makes other Celo agents better |

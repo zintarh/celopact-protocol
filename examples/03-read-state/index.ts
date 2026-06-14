@@ -26,11 +26,11 @@
 import "dotenv/config";
 import { createPublicClient, http, formatUnits, type Address } from "viem";
 import {
-  celoCeloSepolia,
   CELOPACT_ESCROW_ABI,
   ERC20_ABI,
   MilestoneState,
-} from "@celopact/sdk";
+  resolveChain,
+} from "celopact-sdk";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Load configuration — no private keys needed
@@ -59,7 +59,7 @@ const ESCROW_ID        = BigInt(requireEnv("ESCROW_ID"));
 // ─────────────────────────────────────────────────────────────────────────────
 
 const client = createPublicClient({
-  chain: celoCeloSepolia,
+  chain: resolveChain({ rpcUrl: RPC_URL }),
   transport: http(RPC_URL),
 });
 

@@ -1,22 +1,49 @@
 {
-  "name": "@celopact/sdk",
+  "name": "celopact-sdk",
   "version": "0.1.0",
-  "description": "The open-source trust SDK for agent-to-agent commerce on Celo. Milestone-based escrow with ERC-8004 identity verification.",
+  "description": "Milestone-based escrow SDK for AI agent-to-agent commerce on Celo. ERC-8004 identity, optimistic release, dispute resolution.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "SKILL.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "prepare": "npm run build"
   },
-  "keywords": ["celo", "escrow", "ai-agents", "erc-8004", "web3", "celopact"],
+  "keywords": [
+    "celo",
+    "escrow",
+    "ai-agents",
+    "erc-8004",
+    "web3",
+    "celopact",
+    "stablecoin",
+    "milestone",
+    "agent-commerce"
+  ],
   "license": "MIT",
+  "homepage": "https://zintarh.github.io/celopact-protocol/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zintarh/celopact-protocol.git",
+    "directory": "sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/zintarh/celopact-protocol/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "viem": "^2.21.0"
   },

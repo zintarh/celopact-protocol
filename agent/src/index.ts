@@ -15,9 +15,7 @@
 import "dotenv/config";
 import { createPublicClient, http, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { resolveChain } from "../../sdk/src/networks.js";
-import type { CeloNetworkName } from "../../sdk/src/networks.js";
-import { CELOPACT_ESCROW_ABI } from "../../sdk/src/abi.js";
+import { resolveChain, CELOPACT_ESCROW_ABI, type CeloNetworkName } from "celopact-sdk";
 
 const CONTRACT_ADDRESS  = process.env["CONTRACT_ADDRESS"] as Address;
 const REGISTRY_ADDRESS  = process.env["REGISTRY_ADDRESS"] as Address;
@@ -50,7 +48,7 @@ async function main(): Promise<void> {
   console.log("\n  CELOPACT PROTOCOL AGENT");
   console.log("  ─────────────────────────────────────────────");
   console.log(`  Address:  ${agentA.address}`);
-  console.log(`  Network:  Celo Sepolia (chain ID 11142220)`);
+  console.log(`  Network:  ${NETWORK} (chain ID ${CHAIN.id})`);
   console.log(`  Contract: ${CONTRACT_ADDRESS ?? "(not set)"}`);
   console.log(`  Registry: ${REGISTRY_ADDRESS ?? "(not set)"}`);
 

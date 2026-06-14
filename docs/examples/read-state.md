@@ -39,7 +39,7 @@ Good for low-level control, multicall batching, or integrating into a system wit
 
 ```typescript
 import { createPublicClient, http } from "viem";
-import { celoCeloSepolia, CELOPACT_ESCROW_ABI } from "@celopact/sdk";
+import { celoCeloSepolia, CELOPACT_ESCROW_ABI } from "celopact-sdk";
 
 const client = createPublicClient({
   chain: celoCeloSepolia,
@@ -77,7 +77,7 @@ Both produce the same data — the SDK methods use `readContract` internally.
 The `MilestoneState` enum is exported from the SDK:
 
 ```typescript
-import { MilestoneState } from "@celopact/sdk";
+import { MilestoneState } from "celopact-sdk";
 
 if (milestone.state === MilestoneState.RELEASED) {
   console.log("Payment complete");

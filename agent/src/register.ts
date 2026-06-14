@@ -8,7 +8,7 @@
  *   1. Call identityRegistry.register(agentURI) → mints an ERC-721 NFT (agentId)
  *   2. Call adapter.linkAgent(agentId) → links wallet → agentId in CeloPact
  *
- * After running, visit https://celo-sepolia.blockscout.com/agent/<address> to see your agent.
+ * After running, visit ${EXPLORER}/agent/<address> to see your agent.
  *
  * Usage: npm run register
  */
@@ -23,11 +23,18 @@ import {
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { resolveChain } from "../../sdk/src/networks.js";
-import type { CeloNetworkName } from "../../sdk/src/networks.js";
+import { resolveChain, type CeloNetworkName } from "celopact-sdk";
 
-const ERC8004_IDENTITY_REGISTRY: Address    = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
-const ERC8004_REPUTATION_REGISTRY: Address  = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
+const NETWORK = (process.env["NETWORK"] ?? "celo-sepolia");
+const IS_MAINNET = NETWORK === "celo-mainnet";
+
+const ERC8004_IDENTITY_REGISTRY: Address = IS_MAINNET
+  ? "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+  : "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+const ERC8004_REPUTATION_REGISTRY: Address = IS_MAINNET
+  ? "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63"
+  : "0x8004B663056A597Dffe9eCcC1965A193B7388713";
+const EXPLORER = IS_MAINNET ? "https://celoscan.io" : "https://celo-sepolia.blockscout.com";
 
 // ── ERC-8004 Identity Registry ABI (minimal) ─────────────────────────────────
 const IDENTITY_ABI = [
@@ -142,7 +149,7 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
       args: [account.address],
     });
     console.log(`           Already registered ✓  agentId: ${agentId}`);
-    console.log(`           blockscout: https://celo-sepolia.blockscout.com/address/${account.address}`);
+    console.log(`           blockscout: ${EXPLORER}/address/${account.address}`);
     return;
   }
 
@@ -189,7 +196,7 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
   });
   await publicClient.waitForTransactionReceipt({ hash: linkTx });
   console.log(`           Linked ✓  tx: ${linkTx}`);
-  console.log(`           blockscout: https://celo-sepolia.blockscout.com/address/${account.address}`);
+  console.log(`           blockscout: ${EXPLORER}/address/${account.address}`);
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -208,7 +215,7 @@ async function main(): Promise<void> {
   console.log(`  Network:   ${network}`);
   console.log(`  Identity:  ${ERC8004_IDENTITY_REGISTRY}`);
   console.log(`  Adapter:   ${adapterAddress}`);
-  console.log(`  8004scan:  https://celo-sepolia.blockscout.com`);
+  console.log(`  8004scan:  ${EXPLORER}`);
 
   await registerAgent("CeloPact Requester", agentAKey, adapterAddress);
   await registerAgent("CeloPact Fulfiller", agentBKey, adapterAddress);

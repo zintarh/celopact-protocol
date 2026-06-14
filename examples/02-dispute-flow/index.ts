@@ -40,11 +40,11 @@ import {
 } from "viem";
 import {
   CeloPact,
-  celoCeloSepolia,
   ERC20_ABI,
   MilestoneState,
+  resolveChain,
   type CeloPactConfig,
-} from "@celopact/sdk";
+} from "celopact-sdk";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Load and validate environment variables
@@ -99,7 +99,7 @@ console.log(`  Token:    ${TOKEN_ADDRESS}`);
 // ─────────────────────────────────────────────────────────────────────────────
 
 const publicClient = createPublicClient({
-  chain: celoCeloSepolia,
+  chain: resolveChain({ rpcUrl: RPC_URL }),
   transport: http(RPC_URL),
 });
 

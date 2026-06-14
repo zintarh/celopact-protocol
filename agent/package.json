@@ -11,11 +11,12 @@
   },
   "license": "MIT",
   "dependencies": {
-    "viem": "^2.21.0",
-    "dotenv": "^16.4.0"
+    "celopact-sdk": "file:../sdk",
+    "dotenv": "^16.4.0",
+    "viem": "^2.21.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "tsx": "^4.7.0"
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
   }
 }

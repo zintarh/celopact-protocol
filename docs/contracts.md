@@ -1,38 +1,44 @@
 # Deployed Contracts
 
-## Celo Sepolia (Testnet)
+## Celo Mainnet (Production)
 
-Chain ID: **`11142220`** · RPC: `https://forno.celo-sepolia.celo-testnet.org`
+Chain ID: **`42220`** · RPC: `https://forno.celo.org`
 
 | Contract | Address | Explorer |
 |---|---|---|
-| `CeloPactEscrow` | `0x6462fB5F67B652CB74f99C0D69e8c5086C641017` | [Blockscout (verified)](https://celo-sepolia.blockscout.com/address/0x6462fB5F67B652CB74f99C0D69e8c5086C641017) |
-| `ERC8004Adapter` | `0x224e35502Ae14d4793FA679BF0ca82094804017a` | [Blockscout (verified)](https://celo-sepolia.blockscout.com/address/0x224e35502Ae14d4793FA679BF0ca82094804017a) |
+| `CeloPactEscrow` | `0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59` | [Celoscan](https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59) |
+| `ERC8004Adapter` | `0x5BEc6750d2E53dB1860b38f8f866220D742fBC26` | [Celoscan](https://celoscan.io/address/0x5BEc6750d2E53dB1860b38f8f866220D742fBC26) |
 
 | Token | Address | Decimals |
 |---|---|---|
-| USDm (demo) | `0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b` | 18 |
-| USDT | `0xd077A400968890Eacc75cdc901F0356c943e4fDb` | 6 |
+| USDT | `0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e` | 6 |
 
 | ERC-8004 Registry | Address |
 |---|---|
-| Identity | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
-| Reputation | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
+| Identity | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
+| Reputation | `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63` |
 
-| Agent | Address |
-|---|---|
-| CeloPact Requester | `0xE55D1f443338A94c83d57821C96dAF9C7060150C` |
-| CeloPact Fulfiller | `0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec` |
+| Agent | Address | agentId |
+|---|---|---|
+| CeloPact Requester | `0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4` | 9351 |
+| CeloPact Fulfiller | `0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec` | 9352 |
 
-Full manifest: [`deployments/celo-sepolia.json`](https://github.com/zintarh/celopact-protocol/blob/main/deployments/celo-sepolia.json)
+Full manifest: [`deployments/celo-mainnet.json`](https://github.com/zintarh/celopact-protocol/blob/main/deployments/celo-mainnet.json)
 
 ---
 
-## Celo Mainnet (SDK-ready)
+## Celo Sepolia (Legacy testnet)
 
-Chain ID: **`42220`** · Deploy with `forge script script/Deploy.s.sol --rpc-url celo`
+> Pre-hardening deployment. Missing `refundStaleMilestone` and `defaultDisputeToAgentA`. Use mainnet for production.
 
-See [`deployments/celo-mainnet.json`](https://github.com/zintarh/celopact-protocol/blob/main/deployments/celo-mainnet.json) for ERC-8004 addresses and USDT.
+Chain ID: **`11142220`** · RPC: `https://forno.celo-sepolia.celo-testnet.org`
+
+| Contract | Address |
+|---|---|
+| `CeloPactEscrow` | `0x6462fB5F67B652CB74f99C0D69e8c5086C641017` |
+| `ERC8004Adapter` | `0x224e35502Ae14d4793FA679BF0ca82094804017a` |
+
+See [`deployments/celo-sepolia.json`](https://github.com/zintarh/celopact-protocol/blob/main/deployments/celo-sepolia.json).
 
 ---
 
@@ -43,7 +49,7 @@ See [`deployments/celo-mainnet.json`](https://github.com/zintarh/celopact-protoc
 | `createEscrow(agentB, amounts)` | Requester | Lock tokens, open escrow |
 | `submitMilestone(escrowId, index, outputHash)` | Fulfiller | Submit work, open challenge window |
 | `releaseMilestone(escrowId, index, oracleSig)` | Anyone | Pay Fulfiller (oracle sig or after window) |
-| `disputeMilestone(escrowId, index, arbiter)` | Requester | Freeze funds, name arbiter |
+| `disputeMilestone(escrowId, index, arbiter)` | Requester | Freeze funds, propose ERC-8004 arbiter |
 | `resolveDispute(escrowId, index, winner)` | Arbiter | Send funds to winner |
 | `refundStaleMilestone(escrowId, index)` | Requester | Refund if Fulfiller misses deadline |
 | `defaultDisputeToAgentA(escrowId, index)` | Anyone | Refund Requester if arbiter times out |
@@ -63,7 +69,7 @@ enum MilestoneState {
 }
 ```
 
-Exported from `@celopact/sdk` as `MilestoneState`.
+Exported from `celopact-sdk` as `MilestoneState`.
 
 ---
 
@@ -73,11 +79,12 @@ Exported from `@celopact/sdk` as `MilestoneState`.
 
 ---
 
-## Constants
+## Constants (mainnet deployment)
 
-| Constant | Value (demo) |
+| Constant | Value |
 |---|---|
 | `CHALLENGE_WINDOW` | 30 minutes |
 | `MILESTONE_SUBMISSION_DEADLINE` | 1 day |
 | `DISPUTE_RESOLUTION_DEADLINE` | 1 day |
 | `MIN_REPUTATION` | 100 |
+| `MIN_ARBITER_REPUTATION` | 100 |
