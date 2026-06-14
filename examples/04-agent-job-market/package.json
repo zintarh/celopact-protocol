@@ -1,0 +1,19 @@
+{
+  "name": "celopact-example-agent-job-market",
+  "version": "1.0.0",
+  "description": "Real-world demo: Agent A posts a job, Agent B performs analysis, oracle verifies, payment releases",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "celopact-sdk": "file:../../sdk",
+    "dotenv": "^16.6.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  },
+  "type": "module"
+}

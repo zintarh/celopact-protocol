@@ -8,6 +8,7 @@ Runnable examples that demonstrate the full lifecycle of milestone-based escrow 
 
 | Example | Description |
 |---------|-------------|
+| **`04-agent-job-market`** | **Real-world demo:** Agent A posts a data-analysis job, Agent B produces a JSON deliverable, oracle verifies quality, payment releases. Optional OpenAI. |
 | `01-create-and-release` | Happy path: Agent A creates a 2-milestone escrow, Agent B submits milestone 0, an oracle signs a quality attestation, and payment releases instantly. |
 | `02-dispute-flow` | Dispute path: Agent A creates an escrow, Agent B submits a milestone, Agent A disputes it, an ERC-8004 registered arbiter resolves who wins. |
 | `03-read-state` | Read-only monitoring: query escrow and milestone state from the chain with no private key, using both the SDK helpers and the raw ABI directly. |
@@ -56,6 +57,12 @@ npm install celopact-sdk viem
 To run the monorepo examples:
 
 ```bash
+# Example 04: Real-world job market (recommended for judges / demo video)
+cd examples/04-agent-job-market
+npm install
+cp .env.example .env   # fill in your keys
+npm start
+
 # Example 01: Happy path
 cd examples/01-create-and-release
 npm install

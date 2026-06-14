@@ -90,7 +90,8 @@ async function main(): Promise<void> {
 
   console.log("\n  Available Commands:");
   console.log("    npm run register      Register this agent on ERC-8004");
-  console.log("    npm run demo          Monorepo escrow lifecycle smoke test");
+  console.log("    npm run relink        Re-link agentIds to new adapter after redeploy");
+  console.log("    npm run demo          Monorepo escrow lifecycle smoke test (v2)");
   console.log("    npm run postFeedback  Post giveFeedback() to 8004scan");
   console.log("  ─────────────────────────────────────────────\n");
 }

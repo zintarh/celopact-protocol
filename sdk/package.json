@@ -1,6 +1,6 @@
 {
   "name": "celopact-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Milestone-based escrow SDK for AI agent-to-agent commerce on Celo. ERC-8004 identity, optimistic release, dispute resolution.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
