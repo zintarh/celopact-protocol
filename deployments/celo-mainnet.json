@@ -10,20 +10,27 @@
   },
   "contracts": {
     "ERC8004Adapter": {
-      "address": "0x5BEc6750d2E53dB1860b38f8f866220D742fBC26",
+      "address": "0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5",
       "verified": true,
-      "explorer": "https://celoscan.io/address/0x5BEc6750d2E53dB1860b38f8f866220D742fBC26"
+      "explorer": "https://celoscan.io/address/0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5",
+      "deployTx": "0x1e388a5a75d5931c2dddf5cda0e129e8285b56ea3de5c8f2f08612cd1a68971e"
     },
     "CeloPactEscrow": {
-      "address": "0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59",
+      "address": "0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9",
       "verified": true,
-      "explorer": "https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59",
+      "explorer": "https://celoscan.io/address/0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9",
+      "deployTx": "0x400083393b253cebb3c0386f876f55063a0dc10fc15ef8a68e7a8d0d68cae425",
       "constructorArgs": {
-        "registry": "0x5BEc6750d2E53dB1860b38f8f866220D742fBC26",
+        "registry": "0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5",
         "token": "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
         "oracle": "0xAB5EeDBFFd9040E8a0b9a8E061B5CB7bA638a45F"
       }
     }
+  },
+  "previousDeployment": {
+    "note": "v1 — oracle escrow runs, 49+ txs. Upgraded to v2 for acceptDispute feature.",
+    "ERC8004Adapter": "0x5BEc6750d2E53dB1860b38f8f866220D742fBC26",
+    "CeloPactEscrow": "0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59"
   },
   "tokens": {
     "USDT": {
@@ -51,95 +58,19 @@
       { "action": "registerFulfiller", "tx": "0xaa2aabecf6f0e11a72c9918ad8bfec611d387e8b11e1049d3950ced65318dc80" },
       { "action": "linkFulfiller", "tx": "0x645895cce021ffc17d8119cda0a7f0db7ac895b7e736332170759066abd7c5e7" }
     ],
-    "escrow11": {
-      "escrowId": 11,
-      "note": "Full 5-step lifecycle — both milestones released",
-      "txs": {
-        "createEscrow": "0x5ef22bdd0d3b12d6c3cf31d726c93b47174f8167b03f9a93baaaca24fdb52bc3",
-        "submitM0": "0x0c494beb2144377cc2b6f35fb7e54418a14b55e64018951bc1d273736691ffa2",
-        "releaseM0": "0x4813f2bc61134495c251f4aa7706c6c53ea5bcc589f08a5adbafb055da472380",
-        "submitM1": "0x8c5a5476f438c19ebdd884a27935118b0873a56786a02a8fc994d15e51a334fd",
-        "releaseM1": "0x01464f86d8e57128e1f92f835d99d63ff642d3519cb5755aa13548e44c587e02"
-      }
-    },
-    "batchA": {
-      "note": "10 runs × 4 txs — create, submit M0, release M0, submit M1 (M1 not released)",
-      "runs": [
-        {
-          "run": 1,
-          "createEscrow": "0x5408d12b698560456fc90d2e5a09d4204004367e5309a70979cb15630f987940",
-          "submitM0": "0x603249a8ad75ca64390a15d487ccbeb4d059b34812c58b024cc4c1b7e4ec7460",
-          "releaseM0": "0xf7860b0a55f88e2acb350b28e0aaab8d40e5998535ac5f3eae53d2f72986f39c",
-          "submitM1": "0x725f2e9e48a3dde677f0021e7d6ecbefd7cad086ed8170119c15b7e927a949df"
-        },
-        {
-          "run": 2,
-          "createEscrow": "0x47869f345a8790d9f8d49091f9788153db933426a1ce85c699312d004befb1db",
-          "submitM0": "0x72905de14be10643c2446ac1ae6c7a3dc44decb92c30435e6a59931def5a47e3",
-          "releaseM0": "0xecf553ce577caac6ff0f0c0664d82168d22fac0204a90eda6267b3efc1a422ac",
-          "submitM1": "0x5ba62739d5cc5a20e5fc10fc19e20c0b7ffafe7d18ad45185b60d583dd178228"
-        },
-        {
-          "run": 3,
-          "createEscrow": "0x8dab072ceb258cb9be9af460ba6770853d249083ecb4562eac40495b58f059dd",
-          "submitM0": "0xe3610da6871227c3025de93d153b2d2405fd5a727f1b364679e05a97671c9f54",
-          "releaseM0": "0x986664e75e8a161a655398aff52b373c9161c0968719793e1b837a69fcb89414",
-          "submitM1": "0x920fd985a83d95948d55161f0bfb32b10596689a1ed1772c237a76fc3caf56fa"
-        },
-        {
-          "run": 4,
-          "createEscrow": "0x841aacac5d0a708e117d2f5623faf8818f427a2faef64303a348309be5a1b2e4",
-          "submitM0": "0xca6c88c145e0fa5d9dd36fa064e4f98aac16711bfd0fabc409be6c85fd80fbd4",
-          "releaseM0": "0xe87bc58fb9f32dbc12ef5cc4355614fd282a39ca3f50d88af71310f808deda5c",
-          "submitM1": "0x8cbec73b75d388e31b24e9915f7154a850afd38aee702fa333da23e371894902"
-        },
-        {
-          "run": 5,
-          "createEscrow": "0x60486670553ba2717d4521fd10234b2983ce9eed30889acad199eee84d3c30fc",
-          "submitM0": "0xc72fc27daa27645bf3224e7a45ba4cc6569487cd24b7e3c71a2f55bf86af923d",
-          "releaseM0": "0xd64ace3fd879e45319139420583441fd220a3625ca8f8242c500bf6d49bf07ff",
-          "submitM1": "0x306a8a30ea173ac23516ccec8e375171e0616e35d3f87164416246e51b4a7ef6"
-        },
-        {
-          "run": 6,
-          "createEscrow": "0x276a3301ffeecd6843d35a70a637989d40289ee281a746ff08c065f53238a2cc",
-          "submitM0": "0x941fa50c86d5df5a3b01d16ad0e5063f408db2c8c43fea43778203278278cc87",
-          "releaseM0": "0xd3aa7ef0afaebf1475fa5f1ad3701ca42ae35c8004789bff8d1c4af2b2ea13c0",
-          "submitM1": "0x6b1e32d545d14d8d957311490f51c52f5b17782e3cbf2f61423f74c71fcaab5b"
-        },
-        {
-          "run": 7,
-          "createEscrow": "0x507bb66b47d734d17a2d6504d23e4c07d2c2f2995a95764589c128ae33d1608b",
-          "submitM0": "0x210b4d4af8250cedce4fd78849f869c41a72aba8e08b11ed106da0d4efbdf810",
-          "releaseM0": "0x48ff403ae841309cb8375f6544006d678019f094cc9b107daec76a7e0bd7ea04",
-          "submitM1": "0x31dcda0ffeeee93b839066e6de95eb8a27de8191a8145715d830aa577a34a642"
-        },
-        {
-          "run": 8,
-          "createEscrow": "0x1d3bdc5b5fc317eec47fca1588848b842788f5db0a927b975c39340eec370221",
-          "submitM0": "0xa30810d23b24b2ecd5ba964686e505a21e522908c976278919988372f55dc9df",
-          "releaseM0": "0xe0811771cb963039d313de262c867184c4511ebbdaf026ffc9858e418f899305",
-          "submitM1": "0x83c1bc7fc09297c2e81d2e57c561f45e64a12dfaa6136e087ada59d4ef1dfd76"
-        },
-        {
-          "run": 9,
-          "createEscrow": "0x18466d7b6aa0ae9a2dc163c9dec7009628c3f9c1f52273d69c6484bd63811c33",
-          "submitM0": "0x85b5d81c8a6295d8db4ec16643be16ab997bb6f51e42b48880cd556de51334bb",
-          "releaseM0": "0x3966a6f51f405a6e2f06fd82ebb058cc9e15f733ee3803e2777f7e88102712f0",
-          "submitM1": "0x930758e18985ca418b8f9cab60e6b4cfcb444fa5f665a3906aa0757a5cafecc9"
-        },
-        {
-          "run": 10,
-          "createEscrow": "0xc8a65e9e4f3ce9e710831df2c5900eeb891ab5d6fe929646836f76b6dad417ed",
-          "submitM0": "0xc37675ab017f71f4c090ecae6460dd02f96d30d54afa145823ae9d1b51370b9c",
-          "releaseM0": "0xa956f437279d1b64efca0f854ad44ff6837751b735b567a849e2fd80eb336291",
-          "submitM1": "0xae192067a602586cfcd17a134610d1a13af0a38103848e5eab3129947053deb3"
+    "v1Escrows": {
+      "note": "49+ txs on v1 contract (0x81fe6693…). Full lifecycle runs including escrow #11 and 10-run batch.",
+      "escrow11": {
+        "escrowId": 11,
+        "note": "Full 5-step lifecycle — both milestones released",
+        "txs": {
+          "createEscrow": "0x5ef22bdd0d3b12d6c3cf31d726c93b47174f8167b03f9a93baaaca24fdb52bc3",
+          "submitM0": "0x0c494beb2144377cc2b6f35fb7e54418a14b55e64018951bc1d273736691ffa2",
+          "releaseM0": "0x4813f2bc61134495c251f4aa7706c6c53ea5bcc589f08a5adbafb055da472380",
+          "submitM1": "0x8c5a5476f438c19ebdd884a27935118b0873a56786a02a8fc994d15e51a334fd",
+          "releaseM1": "0x01464f86d8e57128e1f92f835d99d63ff642d3519cb5755aa13548e44c587e02"
         }
-      ]
-    },
-    "batchC": {
-      "note": "Pending — txs from standalone npm install celopact-sdk integration project",
-      "txs": []
+      }
     }
   }
 }

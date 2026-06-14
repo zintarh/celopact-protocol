@@ -16,7 +16,7 @@ import { CeloPact, CELO_NETWORKS, MilestoneState } from "celopact-sdk";
 
 const sdk = new CeloPact({
   network: "celo-mainnet",
-  contractAddress: "0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59",
+  contractAddress: "0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9",
   tokenAddress: CELO_NETWORKS["celo-mainnet"].tokens.usdt,
   privateKey: process.env.PRIVATE_KEY!,
   rpcUrl: "https://forno.celo.org",
@@ -58,7 +58,7 @@ import { MilestoneState } from "celopact-sdk";
 
 | Contract | Address |
 |---|---|
-| CeloPactEscrow | `0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59` |
-| ERC8004Adapter | `0x5BEc6750d2E53dB1860b38f8f866220D742fBC26` |
+| CeloPactEscrow | `0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9` |
+| ERC8004Adapter | `0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5` |
 
 Docs: https://zintarh.github.io/celopact-protocol/

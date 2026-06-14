@@ -33,8 +33,8 @@ cd agent && cp .env.example .env
 Mainnet defaults (from [`deployments/celo-mainnet.json`](https://github.com/zintarh/celopact-protocol/blob/main/deployments/celo-mainnet.json)):
 
 ```bash
-CONTRACT_ADDRESS=0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59
-REGISTRY_ADDRESS=0x5BEc6750d2E53dB1860b38f8f866220D742fBC26
+CONTRACT_ADDRESS=0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9
+REGISTRY_ADDRESS=0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5
 TOKEN_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
 NETWORK=celo-mainnet
 RPC_URL=https://forno.celo.org

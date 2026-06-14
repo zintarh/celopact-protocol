@@ -19,7 +19,7 @@ Runnable examples that demonstrate the full lifecycle of milestone-based escrow 
 - **Node.js 18+** — examples use top-level `await` (ES2022 feature, supported in Node 18+).
 - **Two funded Celo mainnet wallets** — Requester needs USDT; others need CELO for gas.
 - **USDT on Celo mainnet** — `0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e` (6 decimals).
-- **Deployed CeloPactEscrow** — `0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59` on mainnet (see `deployments/celo-mainnet.json`).
+- **Deployed CeloPactEscrow** — `0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9` on mainnet (see `deployments/celo-mainnet.json`).
 
 ---
 

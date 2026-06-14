@@ -6,8 +6,8 @@ Chain ID: **`42220`** · RPC: `https://forno.celo.org`
 
 | Contract | Address | Explorer |
 |---|---|---|
-| `CeloPactEscrow` | `0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59` | [Celoscan](https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59) |
-| `ERC8004Adapter` | `0x5BEc6750d2E53dB1860b38f8f866220D742fBC26` | [Celoscan](https://celoscan.io/address/0x5BEc6750d2E53dB1860b38f8f866220D742fBC26) |
+| `CeloPactEscrow` | `0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9` | [Celoscan](https://celoscan.io/address/0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9) |
+| `ERC8004Adapter` | `0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5` | [Celoscan](https://celoscan.io/address/0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5) |
 
 | Token | Address | Decimals |
 |---|---|---|

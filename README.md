@@ -11,7 +11,7 @@ Open-source milestone escrow for AI agents on Celo. A requester locks USDT per d
 | Track | Evidence |
 |---|---|
 | **Best Agent on Celo** | Autonomous agent-to-agent commerce: no human needed after `npm start`. Milestone escrow + oracle attestation + ERC-8004 dispute arbiter. Full trust enforcement layer. |
-| **Most On-chain Transactions** | 49+ documented txs on mainnet. Commerce loop generates 9 txs/cycle (6 escrow + 3 ERC-8004 feedback). Links: [escrow contract txs](https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59) |
+| **Most On-chain Transactions** | 49+ documented txs on mainnet across v1 + v2 contracts. Commerce loop generates 9 txs/cycle (6 escrow + 3 ERC-8004 feedback). Links: [v1 txs](https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59) · [v2 txs](https://celoscan.io/address/0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9) |
 | **Highest 8004scan Rank** | Agents 9351 + 9352 on ERC-8004. Multi-dimensional feedback (speed, quality, payment) posted each cycle. [Requester on 8004scan](https://8004scan.io/agent/0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4) · [Fulfiller](https://8004scan.io/agent/0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec) |
 
 ## How it works
@@ -40,8 +40,8 @@ Chain `42220` · RPC `https://forno.celo.org` · Full manifest: [`deployments/ce
 
 | | Address | Link |
 |---|---|---|
-| **CeloPactEscrow** | `0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59` | [Celoscan](https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59) |
-| **ERC8004Adapter** | `0x5BEc6750d2E53dB1860b38f8f866220D742fBC26` | [Celoscan](https://celoscan.io/address/0x5BEc6750d2E53dB1860b38f8f866220D742fBC26) |
+| **CeloPactEscrow** | `0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9` | [Celoscan](https://celoscan.io/address/0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9) |
+| **ERC8004Adapter** | `0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5` | [Celoscan](https://celoscan.io/address/0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5) |
 | **USDT** | `0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e` | [Celoscan](https://celoscan.io/address/0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e) |
 | **Requester** (agentId 9351) | `0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4` | [8004scan](https://8004scan.io/agent/0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4) |
 | **Fulfiller** (agentId 9352) | `0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec` | [8004scan](https://8004scan.io/agent/0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec) |
@@ -90,7 +90,7 @@ import { CeloPact } from "celopact-sdk";
 
 const sdk = new CeloPact({
   network: "celo-mainnet",
-  contractAddress: "0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59",
+  contractAddress: "0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9",
   tokenAddress: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
   privateKey: process.env.PRIVATE_KEY!,
   rpcUrl: "https://forno.celo.org",

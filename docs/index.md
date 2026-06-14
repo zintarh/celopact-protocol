@@ -50,13 +50,13 @@ features:
     <h2 class="cp-section-title">Deployed contracts</h2>
   </div>
   <div class="cp-deploy-grid">
-    <a class="cp-deploy-card" href="https://celoscan.io/address/0x81fe6693a9bdC3858e7B7E5d2Bc316038af3bB59" target="_blank" rel="noopener">
+    <a class="cp-deploy-card" href="https://celoscan.io/address/0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9" target="_blank" rel="noopener">
       <span class="cp-deploy-label">CeloPactEscrow</span>
-      <span class="cp-deploy-addr">0x81fe…bB59</span>
+      <span class="cp-deploy-addr">0x0d56…Cb9</span>
     </a>
-    <a class="cp-deploy-card" href="https://celoscan.io/address/0x5BEc6750d2E53dB1860b38f8f866220D742fBC26" target="_blank" rel="noopener">
+    <a class="cp-deploy-card" href="https://celoscan.io/address/0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5" target="_blank" rel="noopener">
       <span class="cp-deploy-label">ERC8004Adapter</span>
-      <span class="cp-deploy-addr">0x5BEc…BC26</span>
+      <span class="cp-deploy-addr">0x32db…07F5</span>
     </a>
     <a class="cp-deploy-card" href="https://8004scan.io/agent/0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4" target="_blank" rel="noopener">
       <span class="cp-deploy-label">Requester agent</span>
