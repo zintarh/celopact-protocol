@@ -38,6 +38,7 @@ Agent A                    Agent B                  Arbiter
    │       names arbiter ─────────────────────────────►│
    │                          │                        │
    │                          │◄── acceptDispute ──────│
+   │                          │    (on-chain accept)   │
    │                          │                        │
    │                          │◄── resolveDispute ─────│
    │                          │    (picks winner)       │
@@ -80,17 +81,17 @@ await sdkA.disputeMilestone({
 
 The milestone transitions to `DISPUTED` state. Funds are frozen — neither agent can touch them until the arbiter resolves the dispute.
 
-**The arbiter must be chosen carefully.** They should be registered on ERC-8004, neutral (not A or B), and agree off-chain before A names them. The arbiter must **`acceptDispute` on-chain** before they can rule — naming alone does not assign active duty.
+**The arbiter must be chosen carefully.** They should be registered on ERC-8004, neutral (not A or B), and agree off-chain before A names them.
 
 ### Step 4 — Arbiter Accepts
 
-Only the named arbiter can accept. This is the on-chain "I will handle this case" step:
+Naming an arbiter does not put them on duty. The arbiter must explicitly accept on-chain:
 
 ```typescript
 await sdkArbiter.acceptDispute(escrowId, 0n);
 ```
 
-If the arbiter never accepts (or never resolves), funds default back to Agent A after the dispute deadline via `defaultDisputeToAgentA`.
+This starts the arbiter's resolution clock. If the arbiter never resolves the dispute after accepting, funds default back to Agent A via `defaultDisputeToAgentA`.
 
 ### Step 5 — Arbiter Resolves
 
@@ -110,9 +111,10 @@ AGENT_A_PRIVATE_KEY=0x...
 AGENT_B_PRIVATE_KEY=0x...
 ARBITER_PRIVATE_KEY=0x...   # must be ERC-8004 registered with score >= 100
 
-CONTRACT_ADDRESS=0x6462fB5F67B652CB74f99C0D69e8c5086C641017
-TOKEN_ADDRESS=0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b
-RPC_URL=https://forno.celo-sepolia.celo-testnet.org
+CONTRACT_ADDRESS=0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9
+TOKEN_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
+RPC_URL=https://forno.celo.org
+NETWORK=celo-mainnet
 ```
 
 ## Expected Output
@@ -120,7 +122,7 @@ RPC_URL=https://forno.celo-sepolia.celo-testnet.org
 ```
   CELOPACT EXAMPLE 02 — Dispute Flow
   ───────────────────────────────────
-  Agent A:  0xE55D1f443338A94c83d57821C96dAF9C7060150C
+  Agent A:  0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4
   Agent B:  0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec
   Arbiter:  0xAB5EeDBFFd9040E8a0b9a8E061B5CB7bA638a45F
 
@@ -134,7 +136,10 @@ RPC_URL=https://forno.celo-sepolia.celo-testnet.org
           Proposed arbiter: 0xAB5EeDBFFd9040E8a0b9a8E061B5CB7bA638a45F
           Milestone state is now DISPUTED.
 
-  Step 4: Arbiter resolves dispute
+  Step 4: Arbiter accepts dispute
+          Arbiter has accepted — resolution clock started.
+
+  Step 5: Arbiter resolves dispute
           Winner: 0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec (Agent B — work accepted)
           Dispute resolved. Funds transferred to winner.
 

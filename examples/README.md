@@ -57,11 +57,11 @@ npm install celopact-sdk viem
 To run the monorepo examples:
 
 ```bash
-# Example 04: Real-world job market (recommended for judges / demo video)
+# Example 04: Real-world job market + demo UI (recommended for judges / video)
 cd examples/04-agent-job-market
 npm install
 cp .env.example .env   # fill in your keys
-npm start
+npm run dev            # UI http://localhost:5174  OR  npm run demo for :8787
 
 # Example 01: Happy path
 cd examples/01-create-and-release
@@ -117,21 +117,22 @@ Then `npm install` will link the local build.
 ```typescript
 import "dotenv/config";
 import { createPublicClient, http, parseUnits, formatUnits, keccak256, encodePacked } from "viem";
+import { celo } from "viem/chains";
 import { signMessage } from "viem/accounts";
-import { CeloPact, celoCeloSepolia, ERC20_ABI } from "celopact-sdk";
+import { CeloPact, ERC20_ABI } from "celopact-sdk";
 import type { Address, Hex } from "viem";
 
 const sdk = new CeloPact({
-  contractAddress: "0x6462fB5F67B652CB74f99C0D69e8c5086C641017",
-  tokenAddress: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b", // USDm on Celo Sepolia
+  contractAddress: "0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9",
+  tokenAddress: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e", // USDT on Celo mainnet
   privateKey: process.env["AGENT_A_PRIVATE_KEY"] as Hex,
-  rpcUrl: "https://forno.celo-sepolia.celo-testnet.org",
+  rpcUrl: "https://forno.celo.org",
 });
 
 // Read token decimals on-chain — never hardcode
-const publicClient = createPublicClient({ chain: celoCeloSepolia, transport: http() });
+const publicClient = createPublicClient({ chain: celo, transport: http() });
 const decimals = await publicClient.readContract({
-  address: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b",
+  address: "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e",
   abi: ERC20_ABI,
   functionName: "decimals",
 }) as number;
@@ -190,11 +191,12 @@ Using the string form of `signMessage` adds an EIP-191 prefix that changes the r
 
 ---
 
-## Contract addresses (Celo Sepolia)
+## Contract addresses (Celo Mainnet)
 
 | Contract | Address |
 |----------|---------|
-| `CeloPactEscrow` | `0x6462fB5F67B652CB74f99C0D69e8c5086C641017` |
-| USDm (test token) | `0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b` |
+| `CeloPactEscrow` | `0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9` |
+| `ERC8004Adapter` | `0x32db7D67250CB05a9E84eD3c3C3D3841cE1B07F5` |
+| USDT | `0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e` |
 
-View on Blockscout: https://celo-sepolia.blockscout.com
+View on Celoscan: https://celoscan.io

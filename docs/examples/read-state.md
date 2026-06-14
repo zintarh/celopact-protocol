@@ -15,9 +15,10 @@ npx tsx index.ts
 ## .env.example
 
 ```bash
-CONTRACT_ADDRESS=0x6462fB5F67B652CB74f99C0D69e8c5086C641017
-TOKEN_ADDRESS=0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b  # optional, for formatted amounts
-RPC_URL=https://forno.celo-sepolia.celo-testnet.org
+CONTRACT_ADDRESS=0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9
+TOKEN_ADDRESS=0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e
+RPC_URL=https://forno.celo.org
+NETWORK=celo-mainnet
 ESCROW_ID=1
 ```
 
@@ -39,10 +40,10 @@ Good for low-level control, multicall batching, or integrating into a system wit
 
 ```typescript
 import { createPublicClient, http } from "viem";
-import { celoCeloSepolia, CELOPACT_ESCROW_ABI } from "celopact-sdk";
+import { celo, CELOPACT_ESCROW_ABI } from "celopact-sdk";
 
 const client = createPublicClient({
-  chain: celoCeloSepolia,
+  chain: celo,
   transport: http(RPC_URL),
 });
 
@@ -111,16 +112,16 @@ For real-time notifications without polling, use `client.watchContractEvent()` w
 ```
   CELOPACT EXAMPLE 03 — Read State
   ─────────────────────────────────
-  Contract: 0x6462fB5F67B652CB74f99C0D69e8c5086C641017
+  Contract: 0x0d56E6963d5e484bba05ad5a5776d16Bb6f70Cb9
   Escrow:   1
 
   Reading escrow via raw ABI (low-level approach)
 
   Escrow #1
   ─────────────────────────────────────────────
-  Agent A (client):  0xE55D1f443338A94c83d57821C96dAF9C7060150C
+  Agent A (client):  0x9d8a7a866af0eeE89B45aBBB4F1BC9C3698B33e4
   Agent B (worker):  0xfB72a7d2d8430e10aFA753fe1afe99B6E27f8Aec
-  Total locked:      0.003 tokens
+  Total locked:      0.003 USDT
   Active:            true
   Milestone count:   2
 
@@ -128,14 +129,14 @@ For real-time notifications without polling, use `client.watchContractEvent()` w
   ─────────────────────────────────────────────
 
   Milestone 0
-    Amount:       0.001 tokens
+    Amount:       0.001 USDT
     State:        RELEASED  — payment sent to Agent B
     Output hash:  0x1234567890abcdef...
-    Submitted at: 2026-06-11T12:34:56.000Z
+    Submitted at: 2026-06-14T12:34:56.000Z
     Arbiter:      (none — not disputed)
 
   Milestone 1
-    Amount:       0.002 tokens
+    Amount:       0.002 USDT
     State:        PENDING   — work not yet submitted
     Output hash:  (none — not yet submitted)
     Submitted at: not yet submitted

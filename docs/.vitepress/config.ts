@@ -37,6 +37,7 @@ export default defineConfig({
       { text: "Get Started", link: "/getting-started" },
       { text: "Examples", link: "/examples/" },
       { text: "Contracts", link: "/contracts" },
+      { text: "Roadmap", link: "/roadmap" },
       {
         text: "GitHub",
         link: "https://github.com/zintarh/celopact-protocol",
@@ -56,6 +57,10 @@ export default defineConfig({
         items: [
           { text: "Overview", link: "/examples/" },
           {
+            text: "04 — Agent Job Market",
+            link: "/examples/agent-job-market",
+          },
+          {
             text: "01 — Create & Release",
             link: "/examples/create-and-release",
           },
@@ -65,7 +70,10 @@ export default defineConfig({
       },
       {
         text: "Reference",
-        items: [{ text: "Deployed Contracts", link: "/contracts" }],
+        items: [
+          { text: "Deployed Contracts", link: "/contracts" },
+          { text: "Roadmap", link: "/roadmap" },
+        ],
       },
     ],
 
