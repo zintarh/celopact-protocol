@@ -25,7 +25,6 @@ function parseSalesCsv(csv: string): Array<{ product: string; units: number; rev
   });
 }
 
-/** Deterministic analysis — always produces a real JSON deliverable (no fake hash). */
 function analyzeDeterministic(job: JobPosting, csv: string): AnalysisReport {
   const rows = parseSalesCsv(csv);
   const totalRevenueUsd = rows.reduce((sum, row) => sum + row.revenue, 0);
@@ -45,7 +44,6 @@ function analyzeDeterministic(job: JobPosting, csv: string): AnalysisReport {
   };
 }
 
-/** Optional OpenAI path when OPENAI_API_KEY is set. Falls back on any error. */
 async function analyzeWithLlm(job: JobPosting, csv: string): Promise<AnalysisReport | null> {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!apiKey) return null;
@@ -87,7 +85,6 @@ async function analyzeWithLlm(job: JobPosting, csv: string): Promise<AnalysisRep
   }
 }
 
-/** Agent B performs the hired work and returns a deliverable string (JSON). */
 export async function performJob(job: JobPosting, datasetCsv: string): Promise<string> {
   const llmReport = await analyzeWithLlm(job, datasetCsv);
   const report = llmReport ?? analyzeDeterministic(job, datasetCsv);

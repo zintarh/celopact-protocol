@@ -1,68 +1,60 @@
 # Roadmap
 
-CeloPact shipped milestone escrow and oracle-verified payments in time for the Celo Onchain Agents Hackathon. Here's what we're building next.
+CeloPact is live on Celo mainnet today. This page is where we're headed — and **why**.
 
-## What's live now
+## Vision
 
-- **Milestone escrow** — lock USDT, release per deliverable, not upfront
-- **Oracle-verified release** — instant payment on verified output, no waiting for the challenge window
-- **Dispute resolution** — two-step arbiter flow (accept → resolve) backed by ERC-8004 reputation
-- **ERC-8004 native** — every agent has an on-chain identity and reputation score
-- **celopact-sdk** — TypeScript SDK covering the full lifecycle: create, submit, release, dispute, accept, resolve
-- **Agent commerce loop** — Agent A and B running continuously on mainnet, recycling capital across escrow cycles
-- **Job market demo** — real deliverables, real oracle verification, real USDT payments
+**CeloPact is the trust protocol for real-life activities that happen online.**
 
----
+Most meaningful work today leaves a **digital footprint** — even when the activity itself is "real life." A courier marks a package delivered. A contractor uploads a signed PDF. An API returns a result. A platform logs a completed task. An agent produces a report from live data.
 
-## Coming soon
+If it happened online and can be verified off-chain, CeloPact is how you **trust it and pay for it**:
 
-### Multi-agent workflows
+1. **Lock** payment in milestone escrow on Celo  
+2. **Prove** the activity happened (hash of deliverable, API attestation, document, tracking data)  
+3. **Verify** via an oracle before funds move  
+4. **Release** USDT to whoever did the work  
 
-Right now it's A → B. We want to support subcontracting: Agent B can open a new escrow against Agent C for part of the work, with the final payment chain resolving back to Agent A. This requires escrow nesting and parent/child escrow linking.
+**Examples of activities with a digital footprint:**
 
-### Reputation-weighted arbiter matching
+| Activity | Digital proof |
+|---|---|
+| Data analysis job | JSON report, dataset hash |
+| Delivery / logistics | Tracking API, signed receipt |
+| Content or design work | File export, platform timestamp |
+| API integration task | Response payload, webhook log |
+| Research or scraping | Structured output, source URLs |
+| Code delivery | Repo commit, build artifact hash |
 
-Instead of Agent A naming an arbiter manually, the protocol should surface arbiters automatically — ranked by ERC-8004 reputation, category specialization, and past dispute accuracy. Agent A picks from a shortlist.
-
-### Streaming milestones
-
-For long-running jobs (hours or days), agents need checkpoints. We're designing a streaming milestone model where Agent B can submit partial deliverables against partial payments, rather than waiting until the full job is complete.
-
-### On-chain oracle registry
-
-Right now the oracle is a trusted key. We want a permissioned oracle registry where oracle operators register their verification criteria, and Agent A can pick the oracle that matches their job type (code review, data analysis, content quality, etc.).
-
-### Cross-chain escrow
-
-Celo is the settlement layer. We want to support jobs where Agent B operates on a different chain — bridging the job spec, deliverable hash, and payment across chains via LayerZero or Hyperlane.
-
-### SDK enhancements
-
-- `watchEscrow` — event subscription for real-time state updates
-- `listEscrows(agentAddress)` — fetch all escrows an agent has participated in
-- Multicall batching for reading many milestones in one RPC round-trip
-- React hooks package (`celopact-sdk/react`)
-
-### Agent reputation scoring
-
-Connect ERC-8004 reputation updates to escrow outcomes. Agent B's score increases when work gets oracle-verified; decreases when disputes are ruled against them. Agents with high scores can unlock lower collateral requirements or higher payment limits.
-
-### Governance
-
-Long-term, the protocol parameters (challenge window duration, minimum arbiter reputation, oracle fee) should be governed on-chain. We're evaluating Celo's governance modules for this.
+The hackathon demo ([Example 04 — Agent Job Market](/examples/agent-job-market)) is the first slice. Same protocol, many more activity types.
 
 ---
 
-## Timeline
+## Today
 
-| Milestone | Target |
-|-----------|--------|
-| celopact-sdk v0.2 (streaming, watchEscrow) | Q3 2026 |
-| Multi-agent subcontracting | Q3 2026 |
-| Oracle registry (v1) | Q4 2026 |
-| Reputation-weighted arbiter matching | Q4 2026 |
-| Cross-chain escrow (pilot) | Q1 2027 |
+Milestone escrow is **shipped and live** on Celo mainnet — USDT locked per deliverable, oracle-verified release, ERC-8004 disputes, [`celopact-sdk`](https://www.npmjs.com/package/celopact-sdk) on npm, and a live mainnet demo.
 
 ---
 
-Have a use case that isn't covered? Open an issue on [GitHub](https://github.com/zintarh/celopact-protocol/issues) or reach out on the [Celo Discord](https://discord.gg/celo).
+## Next (post-hackathon)
+
+### Phala TEE oracle
+
+[Phala Network](https://phala.network/) runs attestation inside a **hardware enclave** instead of a demo wallet. Same CeloPactEscrow contracts — swap the registered oracle address. Zero contract redeploy.
+
+---
+
+## Phases
+
+| Phase | Focus |
+|---|---|
+| **Now** | Milestone escrow, oracle release, disputes, ERC-8004, SDK on mainnet |
+| **Verify real activities** | Oracle plugins for any online activity with a digital footprint |
+| **TEE oracle** | Phala enclave attestation — production-grade checks, same contracts |
+| **Scale** | Multi-arbiter disputes, cross-chain identity, x402-native escrow on HTTP 402 |
+
+---
+
+**Bottom line:** If it happened online and leaves a verifiable trace, CeloPact should lock payment until it's proven.
+
+Questions? [Open an issue on GitHub](https://github.com/zintarh/celopact-protocol/issues).

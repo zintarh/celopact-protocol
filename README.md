@@ -61,25 +61,29 @@ Chain `42220` · RPC `https://forno.celo.org` · Full manifest: [`deployments/ce
 
 ## Real-world demo (for judges)
 
-**Agent A posts a job → Agent B does the work → oracle verifies → payment releases.**
+**Web UI — Agent A posts a job → Agent B does the work → oracle verifies → payment releases.**
 
 ```bash
 cd examples/04-agent-job-market
 cp .env.example .env    # mainnet keys + v2 contract addresses
-npm install
-npm start
+npm install               # celopact-sdk from npm (^0.1.1)
+npm run dev               # open http://localhost:5174
 ```
+
+Click **Run full job on mainnet** — live step timeline, Celoscan links, and JSON deliverable on screen.
+
+For a single-port demo (video recording): `npm run demo` → **http://localhost:8787**
+
+CLI only: `npm run cli`
 
 What happens:
 1. **Agent A** posts a Q1 sales analysis job and locks **0.5 USDT** in escrow
-2. **Agent B** analyzes embedded CSV data (OpenAI if `OPENAI_API_KEY` set, else deterministic worker)
+2. **Agent B** runs **OpenAI** analysis on embedded CSV (`OPENAI_API_KEY` required in `.env`)
 3. **Agent B** submits `keccak256(report)` on-chain
-4. **Oracle** verifies the JSON report (required fields, correct job ID) before signing
-5. **Agent A** releases payment; deliverable saved to `deliverables/escrow-{id}-analysis-report.json`
+4. **Oracle** verifies the JSON report before signing
+5. **Agent A** releases payment; deliverable shown in UI + saved to `deliverables/`
 
-This is the example to record for your demo video — not `agent/demo.ts` (that one only tests escrow with placeholder hashes).
-
-See also: [`agent/demo.ts`](agent/src/demo.ts) for batch escrow smoke tests · [`celopact-commerce`](https://github.com/zintarh/celopact-commerce) for continuous loop + feedback.
+See also: [`agent/demo.ts`](agent/src/demo.ts) for batch escrow smoke tests.
 
 ## Mainnet transactions
 
@@ -152,17 +156,7 @@ const { escrowId } = await sdk.createEscrow({
 });
 ```
 
-More examples: [`examples/`](examples/) · [getting started guide](https://zintarh.github.io/celopact-protocol/getting-started)
-
-## Quick start
-
-**Prerequisites:** Node.js 18+, [Foundry](https://book.getfoundry.sh/getting-started/installation)
-
-```bash
-git clone https://github.com/zintarh/celopact-protocol
-cd celopact-protocol
-
-# Contracts (43 tests)
+## Contracts (43 tests)
 cd contracts && forge test -v
 
 # SDK
@@ -195,7 +189,7 @@ Contract details, security notes, and API reference live in the [docs site](http
 ## Demo
 
 <!-- Paste your Loom / YouTube link here after recording examples/04-agent-job-market -->
-> **Video:** Record [`examples/04-agent-job-market`](examples/04-agent-job-market) — Agent A hires Agent B for data analysis, oracle verifies deliverable, payment releases on Celo mainnet.
+> **Video:** Record the [Agent Job Market UI](examples/04-agent-job-market) — click Run, show timeline + deliverable + Celoscan links.
 
 **What the demo should show:**
 1. Agent A posts job + creates escrow
@@ -203,6 +197,23 @@ Contract details, security notes, and API reference live in the [docs site](http
 3. Oracle quality check passes → attestation signed
 4. Payment releases to Agent B; Agent A receives deliverable file
 5. Celoscan tx links for create / submit / release
+
+## Roadmap
+
+**Vision:** CeloPact is the **trust protocol for real-life activities that happen online**. If an activity leaves a digital footprint — a delivery tracked on a courier site, a signed document, a platform API response, scraped data, a generated report — CeloPact locks funds until an oracle verifies it actually happened. Payment follows proof, not promises.
+
+**Today:** Milestone escrow live on Celo mainnet. Agent A locks USDT; an oracle or arbiter verifies the deliverable before payment moves. Shipped with `celopact-sdk`, ERC-8004 identity, and [`examples/04-agent-job-market`](examples/04-agent-job-market).
+
+**Next (post-hackathon):** [Phala TEE](https://phala.network/) oracle — same escrow contracts, swap the registered oracle address. Attestation runs inside a hardware enclave instead of a demo wallet.
+
+| Phase | Focus |
+|---|---|
+| **Now** | Milestone escrow, oracle release, disputes, ERC-8004, SDK on mainnet |
+| **Verify real activities** | Oracle plugins for any online activity with a digital footprint — deliveries, APIs, documents, automation |
+| **TEE oracle** | Phala enclave attestation — production-grade checks, same contracts |
+| **Scale** | Multi-arbiter disputes, cross-chain identity, x402-native escrow on HTTP 402 |
+
+**Bottom line:** If it happened online and can be verified, CeloPact is how you trust it and pay for it.
 
 ## License
 

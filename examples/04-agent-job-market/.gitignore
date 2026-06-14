@@ -1,4 +1,3 @@
 deliverables/
-*.json
-!package.json
-!tsconfig.json
+ui/dist/
+node_modules/

@@ -1,19 +1,34 @@
 {
   "name": "celopact-example-agent-job-market",
   "version": "1.0.0",
-  "description": "Real-world demo: Agent A posts a job, Agent B performs analysis, oracle verifies, payment releases",
+  "description": "Real-world demo UI: Agent A posts a job, Agent B performs analysis, oracle verifies, payment releases",
+  "type": "module",
   "scripts": {
-    "start": "tsx index.ts"
+    "cli": "tsx cli.ts",
+    "server": "tsx server.ts",
+    "ui:dev": "vite",
+    "ui:build": "vite build",
+    "demo": "npm run ui:build && tsx server.ts",
+    "dev": "concurrently -n server,ui -c green,cyan \"tsx server.ts\" \"vite\"",
+    "start": "npm run demo"
   },
   "dependencies": {
-    "celopact-sdk": "file:../../sdk",
+    "celopact-sdk": "^0.1.1",
     "dotenv": "^16.6.1",
-    "tsx": "^4.22.4",
-    "typescript": "^6.0.3",
+    "express": "^4.21.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "viem": "^2.21.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3"
-  },
-  "type": "module"
+    "@types/express": "^5.0.3",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "concurrently": "^9.2.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
 }

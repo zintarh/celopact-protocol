@@ -18,13 +18,21 @@ export const SAMPLE_DATA_ANALYSIS_JOB: JobPosting = {
     "top product, and one actionable recommendation for Agent A.",
   dataset: "q1_sales.csv",
   deliverable: "analysis-report.json",
-  milestoneAmounts: [500_000n], // 0.5 USDT — one milestone, one deliverable
+  milestoneAmounts: [500_000n],
 };
 
-/** Embedded dataset Agent B analyzes (no external file fetch needed for demo). */
 export const Q1_SALES_CSV = `product,units,revenue_usd
 Widget A,120,4800
 Widget B,85,3400
 Widget C,200,6000
 Widget D,45,2250
 Widget E,310,9300`;
+
+/** JSON-safe job for API responses. */
+export function serializeJob(job: JobPosting) {
+  return {
+    ...job,
+    milestoneAmounts: job.milestoneAmounts.map(String),
+    paymentUsdt: "0.5",
+  };
+}

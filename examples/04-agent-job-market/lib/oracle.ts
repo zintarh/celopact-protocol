@@ -10,7 +10,6 @@ const REQUIRED_FIELDS: Array<keyof AnalysisReport> = [
   "recommendation",
 ];
 
-/** Oracle quality gate — verifies deliverable content before signing. */
 export function verifyDeliverable(deliverable: string, expectedJobId: string): AnalysisReport {
   let report: AnalysisReport;
   try {
