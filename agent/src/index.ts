@@ -7,9 +7,10 @@
  * and releasing funds only when quality is confirmed.
  *
  * Commands:
- *   npm run register  — Register on ERC-8004 registry
- *   npm run demo      — Run full escrow lifecycle (DEMO_RUNS times)
- *   npm start         — Print status and available actions
+ *   npm run register     — Register on ERC-8004 registry
+ *   npm run demo         — Monorepo escrow lifecycle smoke test
+ *   npm run postFeedback — Post ERC-8004 giveFeedback() for 8004scan
+ *   npm start            — Print status and available actions
  */
 
 import "dotenv/config";
@@ -19,8 +20,10 @@ import { resolveChain, CELOPACT_ESCROW_ABI, type CeloNetworkName } from "celopac
 
 const CONTRACT_ADDRESS  = process.env["CONTRACT_ADDRESS"] as Address;
 const REGISTRY_ADDRESS  = process.env["REGISTRY_ADDRESS"] as Address;
-const NETWORK           = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
-const RPC_URL           = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
+const NETWORK           = (process.env["NETWORK"] ?? "celo-mainnet") as CeloNetworkName;
+const RPC_URL           = process.env["RPC_URL"] ?? "https://forno.celo.org";
+const IS_MAINNET        = NETWORK === "celo-mainnet";
+const EXPLORER          = IS_MAINNET ? "https://celoscan.io" : "https://celo-sepolia.blockscout.com";
 const CHAIN             = resolveChain({ network: NETWORK, rpcUrl: RPC_URL });
 const agentAKey         = process.env["AGENT_A_PRIVATE_KEY"] as Hex;
 
@@ -82,12 +85,13 @@ async function main(): Promise<void> {
     }) as bigint;
     console.log(`\n  Protocol Stats:`);
     console.log(`    Total Escrows: ${escrowCount}`);
-    console.log(`    Blockscout:    https://celo-sepolia.blockscout.com/address/${CONTRACT_ADDRESS}`);
+    console.log(`    Explorer:      ${EXPLORER}/address/${CONTRACT_ADDRESS}`);
   }
 
   console.log("\n  Available Commands:");
-  console.log("    npm run register   Register this agent on ERC-8004");
-  console.log("    npm run demo       Run the full escrow lifecycle demo");
+  console.log("    npm run register      Register this agent on ERC-8004");
+  console.log("    npm run demo          Monorepo escrow lifecycle smoke test");
+  console.log("    npm run postFeedback  Post giveFeedback() to 8004scan");
   console.log("  ─────────────────────────────────────────────\n");
 }
 

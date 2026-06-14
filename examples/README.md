@@ -47,7 +47,13 @@ The common variables are:
 
 ## How to install and run each example
 
-Each example installs `celopact-sdk` from the local monorepo via a `file:` path, so no publishing is needed.
+Examples in this monorepo use `file:../../sdk` for local development. **For hackathon / production proof, install from npm:**
+
+```bash
+npm install celopact-sdk viem
+```
+
+To run the monorepo examples:
 
 ```bash
 # Example 01: Happy path
@@ -75,6 +81,14 @@ All examples run with `npx tsx index.ts` (the `start` script calls this).
 
 ## Installing the SDK in your own project
 
+### From npm (recommended)
+
+```bash
+npm install celopact-sdk viem
+```
+
+Use mainnet addresses from [`deployments/celo-mainnet.json`](../deployments/celo-mainnet.json).
+
 ### From within this monorepo (file path reference)
 
 If you are building inside this monorepo, reference the SDK by file path in your `package.json`:
@@ -88,20 +102,6 @@ If you are building inside this monorepo, reference the SDK by file path in your
 ```
 
 Then `npm install` will link the local build.
-
-### From GitHub (once the repo is public)
-
-```bash
-npm install github:zintarh/celopact-protocol
-```
-
-npm will clone the repo and run the `prepare` script (`npm run build`) automatically, producing the compiled `dist/` before linking it.
-
-### From npm
-
-```bash
-npm install celopact-sdk viem
-```
 
 ---
 

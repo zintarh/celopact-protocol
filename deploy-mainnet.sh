@@ -16,7 +16,7 @@ if [ "$NETWORK" = "celo-mainnet" ]; then
   RPC_URL="https://forno.celo.org"
   TOKEN="0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e"   # USDT (6 decimals)
   CHAIN_FLAG="--rpc-url https://forno.celo.org"
-  VERIFIER_FLAGS="--verify --verifier etherscan --verifier-url https://api.celoscan.io/api --etherscan-api-key ${CELOSCAN_API_KEY:-}"
+  VERIFIER_FLAGS="${CELOSCAN_API_KEY:+--verify --verifier etherscan --verifier-url https://api.celoscan.io/api --etherscan-api-key $CELOSCAN_API_KEY}"
 else
   RPC_URL="https://forno.celo-sepolia.celo-testnet.org"
   TOKEN="0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b"   # USDm Sepolia
@@ -133,7 +133,8 @@ echo "  ERC8004Adapter: $ADAPTER_ADDR"
 echo "  CeloPactEscrow: $ESCROW_ADDR"
 echo ""
 echo "  Next steps:"
-echo "    cd agent && npm run register    # register both agents on ERC-8004"
-echo "    npm run demo                    # one full lifecycle (shows tx hashes)"
-echo "    npm run commerce               # start autonomous commerce loop"
+echo "    cd agent && npm run register       # register both agents on ERC-8004"
+echo "    npm install celopact-sdk viem      # use SDK from npm in your own project"
+echo "    npm run demo                       # optional monorepo smoke test"
+echo "    npm run postFeedback               # optional 8004scan feedback"
 echo "═══════════════════════════════════════════════════════════"

@@ -1,7 +1,7 @@
 /**
  * CeloPact Agent — ERC-8004 Registration
  *
- * Registers an agent on the canonical ERC-8004 Identity Registry on Celo Sepolia,
+ * Registers an agent on the canonical ERC-8004 Identity Registry on Celo,
  * then links the wallet to the CeloPact ERC8004Adapter so it can create/join escrows.
  *
  * Two-step flow:
@@ -25,7 +25,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { resolveChain, type CeloNetworkName } from "celopact-sdk";
 
-const NETWORK = (process.env["NETWORK"] ?? "celo-sepolia");
+const NETWORK = (process.env["NETWORK"] ?? "celo-mainnet");
 const IS_MAINNET = NETWORK === "celo-mainnet";
 
 const ERC8004_IDENTITY_REGISTRY: Address = IS_MAINNET
@@ -124,8 +124,8 @@ function buildAgentURI(agentAddress: Address, label: string): string {
 // ── Core registration logic ───────────────────────────────────────────────────
 async function registerAgent(label: string, agentKey: Hex, adapterAddress: Address): Promise<void> {
   const account      = privateKeyToAccount(agentKey);
-  const network      = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
-  const rpcUrl       = process.env["RPC_URL"] ?? "https://forno.celo-sepolia.celo-testnet.org";
+  const network      = (process.env["NETWORK"] ?? "celo-mainnet") as CeloNetworkName;
+  const rpcUrl       = process.env["RPC_URL"] ?? "https://forno.celo.org";
   const chain        = resolveChain({ network, rpcUrl });
   const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
   const walletClient = createWalletClient({ account, chain, transport: http(rpcUrl) });
@@ -133,7 +133,6 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
   console.log(`\n[Register] ${label}`);
   console.log(`           Wallet: ${account.address}`);
 
-  // Check if already linked to the adapter
   const alreadyLinked = await publicClient.readContract({
     address: adapterAddress,
     abi: ADAPTER_ABI,
@@ -149,7 +148,8 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
       args: [account.address],
     });
     console.log(`           Already registered ✓  agentId: ${agentId}`);
-    console.log(`           blockscout: ${EXPLORER}/address/${account.address}`);
+    console.log(`           explorer:   ${EXPLORER}/address/${account.address}`);
+    console.log(`           8004scan:   https://8004scan.io/agent/${account.address}`);
     return;
   }
 
@@ -196,7 +196,8 @@ async function registerAgent(label: string, agentKey: Hex, adapterAddress: Addre
   });
   await publicClient.waitForTransactionReceipt({ hash: linkTx });
   console.log(`           Linked ✓  tx: ${linkTx}`);
-  console.log(`           blockscout: ${EXPLORER}/address/${account.address}`);
+  console.log(`           explorer:   ${EXPLORER}/address/${account.address}`);
+  console.log(`           8004scan:   https://8004scan.io/agent/${account.address}`);
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -211,7 +212,7 @@ async function main(): Promise<void> {
   }
 
   console.log("\n  CELOPACT PROTOCOL — ERC-8004 REGISTRATION");
-  const network = (process.env["NETWORK"] ?? "celo-sepolia") as CeloNetworkName;
+  const network = (process.env["NETWORK"] ?? "celo-mainnet") as CeloNetworkName;
   console.log(`  Network:   ${network}`);
   console.log(`  Identity:  ${ERC8004_IDENTITY_REGISTRY}`);
   console.log(`  Adapter:   ${adapterAddress}`);

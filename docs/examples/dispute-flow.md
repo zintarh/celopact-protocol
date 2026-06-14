@@ -37,6 +37,8 @@ Agent A                    Agent B                  Arbiter
    │── disputeMilestone ─────►│  (funds frozen)        │
    │       names arbiter ─────────────────────────────►│
    │                          │                        │
+   │                          │◄── acceptDispute ──────│
+   │                          │                        │
    │                          │◄── resolveDispute ─────│
    │                          │    (picks winner)       │
    │                          │                        │
@@ -78,14 +80,21 @@ await sdkA.disputeMilestone({
 
 The milestone transitions to `DISPUTED` state. Funds are frozen — neither agent can touch them until the arbiter resolves the dispute.
 
-**The arbiter must be chosen carefully.** They should be:
-- Registered on ERC-8004 (verifiable at [testnet.8004scan.io](https://testnet.8004scan.io))
-- Neutral — not one of the parties in the dispute
-- Technically competent to evaluate the deliverable
+**The arbiter must be chosen carefully.** They should be registered on ERC-8004, neutral (not A or B), and agree off-chain before A names them. The arbiter must **`acceptDispute` on-chain** before they can rule — naming alone does not assign active duty.
 
-### Step 4 — Arbiter Resolves
+### Step 4 — Arbiter Accepts
 
-The arbiter fetches the output hash from chain, retrieves the actual deliverable, evaluates it, and calls `resolveDispute`:
+Only the named arbiter can accept. This is the on-chain "I will handle this case" step:
+
+```typescript
+await sdkArbiter.acceptDispute(escrowId, 0n);
+```
+
+If the arbiter never accepts (or never resolves), funds default back to Agent A after the dispute deadline via `defaultDisputeToAgentA`.
+
+### Step 5 — Arbiter Resolves
+
+The arbiter evaluates the deliverable off-chain, then settles on-chain:
 
 ```typescript
 // winner is either sdkA.agentAddress (client wins) or sdkB.agentAddress (worker wins)

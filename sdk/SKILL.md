@@ -50,6 +50,7 @@ import { MilestoneState } from "celopact-sdk";
 - `submitMilestone({ escrowId, milestoneIndex, outputHash })`
 - `releaseMilestone({ escrowId, milestoneIndex, oracleSignature? })`
 - `disputeMilestone({ escrowId, milestoneIndex, proposedArbiter })`
+- `acceptDispute(escrowId, milestoneIndex)` — arbiter only, required before resolve
 - `resolveDispute(escrowId, milestoneIndex, winner)`
 - `getEscrow(escrowId)` · `getMilestone(escrowId, index)`
 

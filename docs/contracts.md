@@ -50,6 +50,7 @@ See [`deployments/celo-sepolia.json`](https://github.com/zintarh/celopact-protoc
 | `submitMilestone(escrowId, index, outputHash)` | Fulfiller | Submit work, open challenge window |
 | `releaseMilestone(escrowId, index, oracleSig)` | Anyone | Pay Fulfiller (oracle sig or after window) |
 | `disputeMilestone(escrowId, index, arbiter)` | Requester | Freeze funds, propose ERC-8004 arbiter |
+| `acceptDispute(escrowId, index)` | Named arbiter | Accept the case (required before ruling) |
 | `resolveDispute(escrowId, index, winner)` | Arbiter | Send funds to winner |
 | `refundStaleMilestone(escrowId, index)` | Requester | Refund if Fulfiller misses deadline |
 | `defaultDisputeToAgentA(escrowId, index)` | Anyone | Refund Requester if arbiter times out |

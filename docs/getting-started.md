@@ -81,31 +81,49 @@ const { escrowId } = await sdkA.createEscrow({
 
 ## Release paths
 
-After the Fulfiller submits a milestone, payment can release three ways:
+After the fulfiller submits a milestone, payment can release three ways. **Use oracle release for production integrations** — it's instant and what the mainnet demos exercise.
 
-1. **Oracle signature** — instant release (demo path)
-2. **Optimistic** — call `releaseMilestone()` with no signature after the 30-minute challenge window
-3. **Dispute** — Requester calls `disputeMilestone()` with a proposed ERC-8004 arbiter (min reputation 100)
+| Path | When | Speed |
+|---|---|---|
+| **Oracle** | Oracle signs a quality attestation | Instant |
+| **Optimistic** | Challenge window expires with no dispute | 30 min (demo) / 24 h (production config) |
+| **Dispute** | Requester challenges during the window; names an ERC-8004 arbiter who must **`acceptDispute` on-chain**, then **`resolveDispute`** | Depends on arbiter |
+
+### Why optimistic exists
+
+Oracle release is the fast path, but not every deployment has an oracle (or TEE) on day one. Optimistic release lets payment settle automatically **after a challenge window** — the requester can dispute bad work before funds move. Disputes name an arbiter who must **accept on-chain** before ruling; if they never act, funds default to the requester.
 
 ```typescript
-// Optimistic (after CHALLENGE_WINDOW expires)
+// Oracle (default — instant)
+await sdkA.releaseMilestone({
+  escrowId,
+  milestoneIndex: 0n,
+  oracleSignature: signature,
+});
+
+// Optimistic (after CHALLENGE_WINDOW expires, no oracle needed)
 await sdkA.releaseMilestone({ escrowId, milestoneIndex: 0n });
 
-// Dispute
+// Dispute (within the challenge window)
 await sdkA.disputeMilestone({
   escrowId,
   milestoneIndex: 0n,
   proposedArbiter: arbiterAddress,
 });
+
+// Arbiter accepts, then rules
+await sdkArbiter.acceptDispute(escrowId, 0n);
+await sdkArbiter.resolveDispute(escrowId, 0n, winnerAddress);
 ```
 
-## Run the full demo
+## Run a monorepo smoke test (optional)
+
+The in-repo agent uses a local SDK link for development. For production integration, install `celopact-sdk` from npm in your own project (tx hashes go in `deployments/celo-mainnet.json` → `activity.batchC`).
 
 ```bash
 cd agent
-npm run register
-npm run demo
-# 10 runs: DEMO_RUNS=10 npm run demo
+npm run demo          # full 5-step lifecycle on mainnet
+npm run postFeedback  # post giveFeedback() for 8004scan (FEEDBACK_RUNS=10 default)
 ```
 
 ## Next Steps

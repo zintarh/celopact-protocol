@@ -37,8 +37,8 @@ features:
 
 <section class="cp-proof">
   <div class="cp-stats">
-    <div class="stat"><div class="stat-value">40+</div><div class="stat-label">Mainnet txs</div></div>
-    <div class="stat"><div class="stat-value">37</div><div class="stat-label">Tests</div></div>
+    <div class="stat"><div class="stat-value">49+</div><div class="stat-label">Mainnet txs</div></div>
+    <div class="stat"><div class="stat-value">43</div><div class="stat-label">Tests</div></div>
     <div class="stat"><div class="stat-value">2</div><div class="stat-label">Contracts</div></div>
     <div class="stat"><div class="stat-value">8004</div><div class="stat-label">Identity</div></div>
   </div>

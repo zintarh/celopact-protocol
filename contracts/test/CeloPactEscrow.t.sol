@@ -120,7 +120,7 @@ contract CeloPactEscrowTest is Test {
         vm.prank(agentB);
         escrow.submitMilestone(escrowId, 0, hash);
 
-        (, bytes32 storedHash,, CeloPactEscrow.MilestoneState state,) = escrow.getMilestone(escrowId, 0);
+        (, bytes32 storedHash,, CeloPactEscrow.MilestoneState state,,,) = escrow.getMilestone(escrowId, 0);
         assertEq(storedHash, hash);
         assertEq(uint256(state), uint256(CeloPactEscrow.MilestoneState.SUBMITTED));
     }
@@ -225,13 +225,15 @@ contract CeloPactEscrowTest is Test {
         vm.prank(agentA);
         escrow.disputeMilestone(escrowId, 0, arbiter);
 
-        // Arbiter rules in favour of Agent A (refund)
+        // Arbiter accepts then rules in favour of Agent A (refund)
         uint256 agentABalanceBefore = usdt.balanceOf(agentA);
+        vm.prank(arbiter);
+        escrow.acceptDispute(escrowId, 0);
         vm.prank(arbiter);
         escrow.resolveDispute(escrowId, 0, agentA);
 
         assertEq(usdt.balanceOf(agentA), agentABalanceBefore + MILESTONE_1_AMOUNT);
-        (,,,CeloPactEscrow.MilestoneState state,) = escrow.getMilestone(escrowId, 0);
+        (,,,CeloPactEscrow.MilestoneState state,,,) = escrow.getMilestone(escrowId, 0);
         assertEq(uint256(state), uint256(CeloPactEscrow.MilestoneState.RESOLVED));
     }
 
@@ -244,6 +246,8 @@ contract CeloPactEscrowTest is Test {
         escrow.disputeMilestone(escrowId, 0, arbiter);
 
         uint256 agentBBalanceBefore = usdt.balanceOf(agentB);
+        vm.prank(arbiter);
+        escrow.acceptDispute(escrowId, 0);
         vm.prank(arbiter);
         escrow.resolveDispute(escrowId, 0, agentB);
 
@@ -268,10 +272,77 @@ contract CeloPactEscrowTest is Test {
         escrow.submitMilestone(escrowId, 0, keccak256("output"));
         vm.prank(agentA);
         escrow.disputeMilestone(escrowId, 0, arbiter);
+        vm.prank(arbiter);
+        escrow.acceptDispute(escrowId, 0);
 
         vm.expectRevert(abi.encodeWithSelector(CeloPactEscrow.NotArbiter.selector, stranger, arbiter));
         vm.prank(stranger);
         escrow.resolveDispute(escrowId, 0, agentA);
+    }
+
+    function test_resolveDispute_revertsIfNotAccepted() public {
+        uint256 escrowId = _createEscrow();
+        vm.prank(agentB);
+        escrow.submitMilestone(escrowId, 0, keccak256("output"));
+        vm.prank(agentA);
+        escrow.disputeMilestone(escrowId, 0, arbiter);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(CeloPactEscrow.DisputeNotAccepted.selector, escrowId, 0)
+        );
+        vm.prank(arbiter);
+        escrow.resolveDispute(escrowId, 0, agentA);
+    }
+
+    function test_acceptDispute_revertsIfNotNamedArbiter() public {
+        uint256 escrowId = _createEscrow();
+        vm.prank(agentB);
+        escrow.submitMilestone(escrowId, 0, keccak256("output"));
+        vm.prank(agentA);
+        escrow.disputeMilestone(escrowId, 0, arbiter);
+
+        vm.expectRevert(abi.encodeWithSelector(CeloPactEscrow.NotArbiter.selector, stranger, arbiter));
+        vm.prank(stranger);
+        escrow.acceptDispute(escrowId, 0);
+    }
+
+    function test_acceptDispute_success_emitsEvent() public {
+        uint256 escrowId = _createEscrow();
+        vm.prank(agentB);
+        escrow.submitMilestone(escrowId, 0, keccak256("output"));
+        vm.prank(agentA);
+        escrow.disputeMilestone(escrowId, 0, arbiter);
+
+        vm.expectEmit(true, true, true, false);
+        emit CeloPactEscrow.DisputeAccepted(escrowId, 0, arbiter);
+        vm.prank(arbiter);
+        escrow.acceptDispute(escrowId, 0);
+
+        (,,,, address storedArbiter, bool accepted, uint256 acceptedAt) = escrow.getMilestone(escrowId, 0);
+        assertEq(storedArbiter, arbiter);
+        assertTrue(accepted);
+        assertGt(acceptedAt, 0);
+    }
+
+    function test_acceptDispute_revertsIfAlreadyAccepted() public {
+        uint256 escrowId = _createEscrow();
+        vm.prank(agentB);
+        escrow.submitMilestone(escrowId, 0, keccak256("output"));
+        vm.prank(agentA);
+        escrow.disputeMilestone(escrowId, 0, arbiter);
+        vm.prank(arbiter);
+        escrow.acceptDispute(escrowId, 0);
+
+        vm.expectRevert(abi.encodeWithSelector(CeloPactEscrow.DisputeAlreadyAccepted.selector, escrowId, 0));
+        vm.prank(arbiter);
+        escrow.acceptDispute(escrowId, 0);
+    }
+
+    function test_createEscrow_revertsOnNoMilestones() public {
+        uint256[] memory empty = new uint256[](0);
+        vm.expectRevert(CeloPactEscrow.NoMilestones.selector);
+        vm.prank(agentA);
+        escrow.createEscrow(agentB, empty);
     }
 
     // ─────────────────────────────────────────────────────────

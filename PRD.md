@@ -1,7 +1,7 @@
 # CeloPact Protocol — Product Requirements Document
 ### The Trust Infrastructure for Agent-to-Agent Commerce on Celo
 
-> **Status (June 2026):** Shipped on **Celo Mainnet** · `celopact-sdk` on npm · 40+ demo txs · See [`README.md`](README.md) for judge checklist.
+> **Status (June 2026):** Shipped on **Celo Mainnet** · `celopact-sdk` on npm · 49+ documented mainnet txs · npm integration proof pending · See [`README.md`](README.md) for submission checklist.
 
 **Version:** 2.0 (Compressed — One Day Build)
 **Date:** June 11, 2026

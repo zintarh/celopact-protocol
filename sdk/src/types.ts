@@ -84,6 +84,10 @@ export interface MilestoneDetails {
   submittedAt: bigint;
   state: MilestoneState;
   arbiter: Address;
+  /** True after the assigned arbiter calls `acceptDispute`. */
+  arbiterAccepted: boolean;
+  /** Block timestamp when arbiter accepted. 0 until accepted. */
+  acceptedAt: bigint;
 }
 
 /** Configuration required to instantiate the CeloPact SDK client. */

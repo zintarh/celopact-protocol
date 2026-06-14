@@ -118,7 +118,7 @@ contract CeloPactEscrowSecurityTest is Test {
         escrow.refundStaleMilestone(id, 0);
 
         assertEq(usdt.balanceOf(agentA), before + M1);
-        (,,, CeloPactEscrow.MilestoneState state,) = escrow.getMilestone(id, 0);
+        (,,, CeloPactEscrow.MilestoneState state,,,) = escrow.getMilestone(id, 0);
         assertEq(uint256(state), uint256(CeloPactEscrow.MilestoneState.CANCELLED));
     }
 
@@ -158,6 +158,30 @@ contract CeloPactEscrowSecurityTest is Test {
 
         vm.expectRevert();
         escrow.defaultDisputeToAgentA(id, 0);
+    }
+
+    function test_defaultDisputeToAgentA_afterAcceptance_deadlineExtendsFromAcceptedAt() public {
+        uint256 id = _createAndSubmit(0);
+        vm.prank(agentA);
+        escrow.disputeMilestone(id, 0, arbiter);
+
+        // Warp to just before original deadline would expire from disputedAt
+        uint256 deadline = escrow.DISPUTE_RESOLUTION_DEADLINE();
+        vm.warp(block.timestamp + deadline - 10);
+
+        // Arbiter accepts — acceptedAt is now set to current timestamp
+        vm.prank(arbiter);
+        escrow.acceptDispute(id, 0);
+
+        // Default should still FAIL because deadline now runs from acceptedAt
+        vm.expectRevert();
+        escrow.defaultDisputeToAgentA(id, 0);
+
+        // Advance past full DISPUTE_RESOLUTION_DEADLINE from acceptedAt
+        vm.warp(block.timestamp + deadline + 1);
+        uint256 before = usdt.balanceOf(agentA);
+        escrow.defaultDisputeToAgentA(id, 0);
+        assertEq(usdt.balanceOf(agentA), before + M1);
     }
 
     // ── Double-spend prevention ──────────────────────────────────────────────

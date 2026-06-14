@@ -143,9 +143,9 @@ for (let i = 0n; i < milestoneCount; i++) {
     abi: CELOPACT_ESCROW_ABI,
     functionName: "getMilestone",
     args: [ESCROW_ID, i],
-  }) as [bigint, `0x${string}`, bigint, number, Address];
+  }) as [bigint, `0x${string}`, bigint, number, Address, boolean, bigint];
 
-  const [amount, outputHash, submittedAt, state, arbiter] = rawMilestone;
+  const [amount, outputHash, submittedAt, state, arbiter, arbiterAccepted, acceptedAt] = rawMilestone;
 
   const submittedAtStr = submittedAt === 0n
     ? "not yet submitted"
@@ -161,6 +161,10 @@ for (let i = 0n; i < milestoneCount; i++) {
   console.log(`    Arbiter:      ${arbiter === "0x0000000000000000000000000000000000000000"
     ? "(none — not disputed)"
     : arbiter}`);
+  console.log(`    Accepted:     ${arbiterAccepted ? "yes" : "no"}`);
+  if (arbiterAccepted) {
+    console.log(`    Accepted at:  ${new Date(Number(acceptedAt) * 1000).toISOString()}`);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

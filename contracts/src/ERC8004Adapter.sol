@@ -12,14 +12,15 @@ interface IERC8004Identity {
 
 /// @dev Minimal interface for the ERC-8004 Reputation Registry.
 ///      Deployed on Celo Sepolia: 0x8004B663056A597Dffe9eCcC1965A193B7388713
+///      tag1/tag2 are `string` (not bytes32) — confirmed from on-chain ABI.
 interface IERC8004Reputation {
     /// @notice Records feedback for a registered agent.
     function giveFeedback(
         uint256 agentId,
         int128 value,
         uint8 valueDecimals,
-        bytes32 tag1,
-        bytes32 tag2,
+        string calldata tag1,
+        string calldata tag2,
         string calldata endpoint,
         string calldata feedbackURI,
         bytes32 feedbackHash
@@ -183,12 +184,12 @@ contract ERC8004Adapter is IAgentRegistry {
         try reputationRegistry.giveFeedback(
             id,
             feedbackValue,
-            0,                      // valueDecimals: whole integer
-            bytes32("successRate"), // tag1: standard ERC-8004 feedback tag
-            bytes32(0),             // tag2: unused
-            "",                     // endpoint: not needed for this feedback type
-            "",                     // feedbackURI: no off-chain data
-            bytes32(0)              // feedbackHash: no commitment
+            0,            // valueDecimals: whole integer
+            "successRate",// tag1: string (not bytes32)
+            "",           // tag2: unused
+            "",           // endpoint: not needed for this feedback type
+            "",           // feedbackURI: no off-chain data
+            bytes32(0)    // feedbackHash: no commitment
         ) {} catch {}
     }
 }

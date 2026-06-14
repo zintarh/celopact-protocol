@@ -56,6 +56,16 @@ export const CELOPACT_ESCROW_ABI = [
   },
   {
     type: "function",
+    name: "acceptDispute",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "resolveDispute",
     stateMutability: "nonpayable",
     inputs: [
@@ -109,11 +119,13 @@ export const CELOPACT_ESCROW_ABI = [
       { name: "milestoneIndex", type: "uint256" },
     ],
     outputs: [
-      { name: "amount",      type: "uint256" },
-      { name: "outputHash",  type: "bytes32" },
-      { name: "submittedAt", type: "uint256" },
-      { name: "state",       type: "uint8" },
-      { name: "arbiter",     type: "address" },
+      { name: "amount",         type: "uint256" },
+      { name: "outputHash",     type: "bytes32" },
+      { name: "submittedAt",    type: "uint256" },
+      { name: "state",          type: "uint8" },
+      { name: "arbiter",        type: "address" },
+      { name: "arbiterAccepted",type: "bool" },
+      { name: "acceptedAt",     type: "uint256" },
     ],
   },
   {
@@ -182,6 +194,9 @@ export const CELOPACT_ESCROW_ABI = [
   },
 
   // ── Custom errors (exact match to CeloPactEscrow.sol) ───────────────────────
+  // OZ inherited errors — included so viem can decode them when they revert
+  { type: "error", name: "ReentrancyGuardReentrantCall", inputs: [] },
+  { type: "error", name: "SafeERC20FailedOperation",     inputs: [{ name: "token", type: "address" }] },
   { type: "error", name: "ZeroAddress",                  inputs: [] },
   { type: "error", name: "SameAgent",                    inputs: [] },
   { type: "error", name: "NoMilestones",                 inputs: [] },
@@ -193,6 +208,22 @@ export const CELOPACT_ESCROW_ABI = [
   { type: "error", name: "PreviousMilestoneIncomplete",  inputs: [{ name: "milestoneIndex", type: "uint256" }] },
   { type: "error", name: "SubmissionDeadlineNotReached", inputs: [{ name: "deadline",       type: "uint256" }] },
   { type: "error", name: "DisputeDeadlineNotReached",    inputs: [{ name: "deadline",       type: "uint256" }] },
+  {
+    type: "error",
+    name: "DisputeNotAccepted",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+  },
+  {
+    type: "error",
+    name: "DisputeAlreadyAccepted",
+    inputs: [
+      { name: "escrowId",       type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+  },
   { type: "error", name: "InvalidSignatureLength",       inputs: [{ name: "length",         type: "uint256" }] },
   { type: "error", name: "ChallengeWindowOpen",          inputs: [{ name: "endsAt",         type: "uint256" }] },
   { type: "error", name: "ChallengeWindowClosed",        inputs: [{ name: "endedAt",        type: "uint256" }] },
@@ -312,6 +343,15 @@ export const CELOPACT_ESCROW_ABI = [
       { name: "milestoneIndex", type: "uint256", indexed: true },
       { name: "arbiter",        type: "address", indexed: true },
       { name: "arbiterScore",   type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "DisputeAccepted",
+    inputs: [
+      { name: "escrowId",       type: "uint256", indexed: true },
+      { name: "milestoneIndex", type: "uint256", indexed: true },
+      { name: "arbiter",        type: "address", indexed: true },
     ],
   },
   {

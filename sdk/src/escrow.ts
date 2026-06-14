@@ -196,7 +196,29 @@ export class CeloPact {
   }
 
   /**
-   * Resolves a disputed milestone. Must be called by the assigned arbiter.
+   * Assigned arbiter accepts a dispute case. Required before `resolveDispute`.
+   *
+   * @param escrowId - The escrow containing the disputed milestone.
+   * @param milestoneIndex - The disputed milestone index.
+   * @returns Transaction hash.
+   */
+  async acceptDispute(escrowId: bigint, milestoneIndex: bigint): Promise<Hex> {
+    const txHash = await this.walletClient.writeContract({
+      address: this.contractAddress,
+      abi: CELOPACT_ESCROW_ABI,
+      functionName: "acceptDispute",
+      args: [escrowId, milestoneIndex],
+      account: this.account,
+      chain: this.chain,
+    });
+
+    await this.publicClient.waitForTransactionReceipt({ hash: txHash });
+    return txHash;
+  }
+
+  /**
+   * Resolves a disputed milestone. Must be called by the assigned arbiter
+   * after `acceptDispute`.
    *
    * The arbiter must be ERC-8004 registered with a reputation score ≥ 100.
    * The `winner` must be either agentA or agentB of the escrow; the contract
@@ -213,6 +235,49 @@ export class CeloPact {
       abi: CELOPACT_ESCROW_ABI,
       functionName: "resolveDispute",
       args: [escrowId, milestoneIndex, winner],
+      account: this.account,
+      chain: this.chain,
+    });
+
+    await this.publicClient.waitForTransactionReceipt({ hash: txHash });
+    return txHash;
+  }
+
+  /**
+   * Requester reclaims a milestone that Agent B never submitted before the deadline.
+   *
+   * @param escrowId - The escrow containing the stale milestone.
+   * @param milestoneIndex - The pending milestone index to refund.
+   * @returns Transaction hash.
+   */
+  async refundStaleMilestone(escrowId: bigint, milestoneIndex: bigint): Promise<Hex> {
+    const txHash = await this.walletClient.writeContract({
+      address: this.contractAddress,
+      abi: CELOPACT_ESCROW_ABI,
+      functionName: "refundStaleMilestone",
+      args: [escrowId, milestoneIndex],
+      account: this.account,
+      chain: this.chain,
+    });
+
+    await this.publicClient.waitForTransactionReceipt({ hash: txHash });
+    return txHash;
+  }
+
+  /**
+   * Triggers a timed-out dispute default, returning funds to the Requester.
+   * Can be called by anyone once the arbiter deadline has passed.
+   *
+   * @param escrowId - The escrow containing the disputed milestone.
+   * @param milestoneIndex - The disputed milestone index.
+   * @returns Transaction hash.
+   */
+  async defaultDisputeToAgentA(escrowId: bigint, milestoneIndex: bigint): Promise<Hex> {
+    const txHash = await this.walletClient.writeContract({
+      address: this.contractAddress,
+      abi: CELOPACT_ESCROW_ABI,
+      functionName: "defaultDisputeToAgentA",
+      args: [escrowId, milestoneIndex],
       account: this.account,
       chain: this.chain,
     });
@@ -250,7 +315,7 @@ export class CeloPact {
       abi: CELOPACT_ESCROW_ABI,
       functionName: "getMilestone",
       args: [escrowId, milestoneIndex],
-    }) as [bigint, Hex, bigint, number, Address];
+    }) as [bigint, Hex, bigint, number, Address, boolean, bigint];
 
     return {
       amount: result[0],
@@ -258,6 +323,8 @@ export class CeloPact {
       submittedAt: result[2],
       state: result[3] as MilestoneState,
       arbiter: result[4],
+      arbiterAccepted: result[5],
+      acceptedAt: result[6],
     };
   }
 

@@ -13,8 +13,9 @@
  *   1. Agent A creates escrow with 1 milestone
  *   2. Agent B submits the milestone (opens challenge window)
  *   3. Agent A disputes within the challenge window, naming an arbiter
- *   4. Arbiter calls resolveDispute, choosing the winner
- *   5. Funds transfer to the winner; escrow is settled
+ *   4. Arbiter accepts the case on-chain (`acceptDispute`)
+ *   5. Arbiter calls resolveDispute, choosing the winner
+ *   6. Funds transfer to the winner; escrow is settled
  *
  * Prerequisites:
  *   - The ARBITER wallet must be registered in the ERC-8004 registry with
@@ -187,7 +188,18 @@ console.log(`          Milestone state is now DISPUTED.`);
 console.log(`          Tx: ${disputeTxHash}`);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. Arbiter resolves the dispute
+// 7. Arbiter accepts the dispute (required before ruling)
+// ─────────────────────────────────────────────────────────────────────────────
+
+console.log(`\n  Step 4: Arbiter accepts the dispute case`);
+
+const acceptTxHash = await sdkArbiter.acceptDispute(escrowId, 0n);
+
+console.log(`          Arbiter accepted.`);
+console.log(`          Tx: ${acceptTxHash}`);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. Arbiter resolves the dispute
 //
 // The arbiter independently reviews the deliverable and decides who wins.
 // In this example we arbitrarily decide in favor of Agent B to demonstrate
@@ -204,7 +216,7 @@ console.log(`          Tx: ${disputeTxHash}`);
 // Change this to sdkA.agentAddress to rule in favor of Agent A (the client).
 const winner: Address = sdkB.agentAddress;
 
-console.log(`\n  Step 4: Arbiter resolves dispute`);
+console.log(`\n  Step 5: Arbiter resolves dispute`);
 console.log(`          Winner: ${winner} (Agent B — work accepted)`);
 
 const resolveTxHash = await sdkArbiter.resolveDispute(
